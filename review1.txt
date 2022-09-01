@@ -1,0 +1,298 @@
+VCPKG + CMake
+	1. VCPKG是什么？干什么？怎么用？
+	VCPKG is a tool for managing packages(Windows/Linux/MacOS).
+	Vcpkg helps you manage C and C++ libraries on Windows, Linux and MacOS.
+	clone - install - integrate(在linux上直接用)。
+	
+	integrate  	project
+				poershell/bash
+	
+	速度差异
+	vcpkg
+	apt
+	
+	
+	Debug/Realease：
+	代码优化
+	调试信息
+	
+	.pdb
+	
+	2. port的使用流程？
+	VS2019: 
+		CMakeSetting.json: 		"cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake"
+		CMakeLists.txt: 		find_package()找到share/.camke文件执行配置过程,target_link_libraries()找到指定的库链接到target上
+		Configure： 				ALL_BUILD.vcxprj/.vcxprj.filter, .sln, ZERO_CHECK.vcxprj/vcxprj.filter 
+		Build: 					.exe, .pdb（Debug？）, .dll, .lib...
+		Build .sln: 			ALL_BUILD.vcxprj.user, .vs ？
+	
+	Nijia:
+		TOOLCHAIN:				-DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake
+		CMakeLists.txt: 		find_package()找到share/.camke文件执行配置过程,target_link_libraries()找到指定的库链接到target上
+		Configure： 				build.ninja .
+		Build: 					.exe, .pdb, .dll, .lib ...
+		
+	GCC:
+		TOOLCHAIN:				"-DCMAKE_TOOLCHAIN_FILE=/home/vliumonica/vcpkg/scripts/buildsystems/vcpkg.cmake"
+		CMakeLists.txt: 		find_package()找到share/.camke文件执行配置过程,target_link_libraries()找到指定的库链接到target上
+		Configure： 				Makefile
+		Build: 					.exe, .so(动态库), .a(静态库) ...
+	
+	Command:
+		VS2019:
+			Configure：			cmake ../ -G "Visual Studio 16 2019" -A Win32 -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON
+								(用的是VCPKG的库再加上： -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake)
+			Build:				cmake --build .
+		Nijia：
+			Configure：			cmake ../ -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON
+								(用的是VCPKG的库再加上： -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake)
+			Build:				cmake --build .
+			
+		GCC:
+			Configure：			cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON
+								(用的是VCPKG的库再加上： -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake)
+			Build:				cmake --build .
+			
+	3. 创建一个简单的port，并且使用它。
+	portName: export_test.
+	usageName: usage_test.
+	
+	
+	
+	configure
+	4.Compile和Build的区别？
+	编译器工作的四个阶段：预处理、编译、汇编、链接。
+	Compile 就是检查语法的，检查没错了，将它们生成相应的二进制文件(OBJ)。
+	Build 则是指compile和link一起做。link是将obj文件链接起来，并检查它们是否具备真正可执行的条件。如果检查通过，则将obj文件链接为exe或dll文件。
+	
+	
+	4.CMake是什么？干什么？怎么用？
+	CMake是配置器。
+	Cmake作用： 根据源文件和CMakeLists.txt，跨IDE生成对应的工程文件/解决方案/Makefile，然后就可以使用make指令快速编译生成exe。
+	makefile关系到了整个工程的编译规则--“自动化编译”。
+	
+	
+	5.VCPKG怎么在CMake/MSBuild 工程中集成。
+	CMake：
+		第一种： 用命令行指定 -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake
+		第二种： 在CMakeSetting.json中设置键值对  "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake"
+	MSBuild：
+		可以直接使用，但是默认只能找到include文件夹，需要手动添加include/xxx等类似文件夹。
+		不想使用VCPKG库可以关闭 property->Configuration Properties->vcpkg ->Use Vcpkg 为 No。
+	
+	
+	6. VCPKG的目录结构。
+	buildtrees：	源码文件。
+	docs：		文档和实例。
+	downloads：	源码压缩包的下载存放路径（安装时vcpkg首先搜索此处）。(tools)  cache?
+	installed：	安装目录（按照规则集中存放，集成时，实质上是添加此目录到搜索路径）。
+	packages：	port存档路径。 (修改适配用户，之后postcheck,失败就不会copy，成功之后复制到installed，保存注册表)
+	scripts：	脚本（CMake...）.
+	toolsrc：	相关组件的源码。   移动到vcpkgtool
+	triplets：	目标平台的设置。
+	versions：	版本信息。
+	
+	
+	7. GNU是什么？干什么？怎么用？
+	GNU 计划最终实现了“打造一套自由、开源的操作系统”的初衷，但该操作系统并非完全产自 GNU 计划，GNU/Linux 操作系统（人们更习惯称为 Linux 操作系统）。
+	一系列能进行人机交互操作并运行其它程序的程序。
+	
+	8. GCC是什么？干什么？怎么用？
+	全拼为GNU Compiler Collection，是一款功能强大的、性能优越的多平台编译器。
+	gcc编译器能将C、C++等语言源程序和目标程序编译、链接成可执行文件。
+	在使用GCC编译器的时候，我们必须给出一系列必要的调用参数和文件名称，介绍一下几个基本常用的参数：
+		-E：仅执行编译预处理（.c -> .i）；
+		-S：将C代码转换为汇编代码（.c -> .S）；
+		-c：仅执行编译操作，不进行链接操作（.c -> .o）；
+		-o：指定生成输出文件名称(不指定就是 a.out)；
+		-g：调试源代码时必须加入这个选项；
+		-C：预处理时不删除注释信息，常与-E同时使用；
+		-L[dir]：编译的时候，指定搜索库的路径。比如你自己的库，可以用它指定目录，不然编译器将只在标准库的目录找。
+		-l[library]：用来指定程序要链接的库，加入头文件目录，-l参数紧接着就是库名；例如：gcc -lcurses hello.c  ；
+		-I[dir]：寻找头文件的目录，在你使用#include "file"的时候，gcc/g++会先在当前目录查找你所指定的头文件，如果没有找到，会到系统默认的头文件目录找。
+		-wall：显示所有警告信息；
+		-static：生成静态库文件;
+		-shared：生成动态库文件，例如： g++ -shared hellp.cpp -o libhello.so；
+		-O0/O1/O2/O3：编译器优化选项分为4个级别，整个源代码在编译链接时进行优化处理，处理速度会变慢；-O0表示没有优化，-O1为缺省值，建议使用-O2/-O3优化级别最高。
+	
+	
+	9. gcc和g++的主要区别
+	# 对于 *.c和*.cpp文件，gcc分别当做c和cpp文件编译（c和cpp的语法强度是不一样的）。
+	# 对于 *.c和*.cpp文件，g++则统一当做cpp文件编译。
+	# 使用g++编译文件时，g++会自动链接标准库STL，而gcc不会自动链接STL。
+	# gcc在编译C文件时，可使用的预定义宏是比较少的。
+	# 在用gcc编译c++文件时，为了能够使用STL，需要加参数 –lstdc++ ，但这并不代表 gcc –lstdc++ 和 g++等价。
+	# gcc在编译cpp文件时/g++在编译c文件和cpp文件时（这时候gcc和g++调用的都是cpp文件的编译器），会加入一些额外的宏，这些宏如下：
+		#define __GXX_WEAK__ 1
+		#define __cplusplus 1
+		#define __DEPRECATED 1
+		#define __GNUG__ 4
+		#define __EXCEPTIONS 1
+		#define __private_extern__ extern6
+	
+	
+	10. MSVC是什么？干什么？怎么用？
+	全称Microsoft Visual C++ ，是C/C++的编译器，后来变成Visual Studio的一部分。
+	编译器生成通用对象文件格式对象 (.obj)，链接器生成可执行文件 (.exe) 或动态链接库 (DLL)。
+	
+	
+	11. MSVC和GCC的区别？
+	MSVC 通常用于编译Windows应用；GCC 则可以用来编译Windows/Linux/MacOS等所有平台的应用。
+	
+	
+	12. MSBuild是什么？干什么？怎么用？
+	MSBuild是一套构建工具，用于帮助软件产品创建流程的自动化，包括编译源代码、打包、测试、部署和创建文档，后来变成Visual Studio的一部分，但不依赖VS。
+	
+	
+	13. Visual Studio是什么？
+	VS是一个基本完整的开发工具集，它包括了整个软件生命周期中所需要的大部分工具，如配置工具+文本编辑器+编译器等。
+	Visual Studio IDE 可以编辑、调试和生成代码。
+	
+	
+	MSVC： 		vs的c/c++
+	.sln: 		msbuild解析.sln
+	msbuild:	cl.exe,link.exe
+	
+	
+	
+	
+	小结：
+	VCPKG：	库管理工具。
+	CMake：	配置工具。
+	VS：		配置工具+文本编辑器+编译器（MSVC）。
+	MSBuild:构建工具。
+	Ninji:	编译器。
+	GCC：	编译器。
+	G++：	编译器。
+	
+
+
+PowerShell：
+	PowerShell兼容所有传统CMD命令。
+	Get-Verb:				返回谓词列表。
+	Get-Command：			别名：gcm，查看所有命令列表。
+	get-process:			别名：ps，查找进程, 可以通过进程名称或者进程ID来获取特定进程
+	Get-Member：				基于对象的输出上运行，能够发现可用于命令的对象、属性和方法。
+	Get-help：				别名：help，说明命令的各个部分。
+	Get-Location：			别名：pwd, 获取当前位置。
+	Get-ChildItem：			别名：ls/dir, 列出文件夹下所有文件。
+	Get-History：			别名：history/h，列出之前的操作命令。
+	Get-date：				别名：date，获取系统当前时间。
+	Get-content：			别名：cat, 输出文件内容到控制台。
+	Get-Alias：				查看当前会话中命令别名。
+	Get-Variable：			查看当前会话中的变量信息。
+	ls [variable]:			查找正在使用的变量。	
+	Set-Location [dir]：		设置当前位置。
+	Select-Object：			筛选器，选取特定的属性。如： -First。
+	Where-Object：			表达式筛选器。如： {$_.ProcessName -Like "p*"}
+	New-item [dir/file]：	别名：ni, 创建一个新的文件夹/文件。	
+	Remove-item	[dir/file]：	别名： rm/del, 删除文件夹/文件。
+	Rename-item [file]:		重命名文件。
+	Copy-item [file]:		别名：cp/copy, 复制文件。
+	Move-item [file]:		移动文件。	
+	-Path：					在指定目录操作。
+	-Recurse:				列出所有包含的项。
+							Get-ChildItem -Path C:\WINDOWS -Recurse //列出指定目录下的所有文件，包括子目录中文件
+							Get-ChildItem -Recurse //列出当前目录下的所有文件，包括子目录中的文件
+	-Name：					按名称筛选项。
+							Get-ChildItem -Name //列出当前目录下的指定文件，显示文件详细信息
+	-Noun：					按名词筛选。
+	-ParameType：			按类型筛选。
+	-Force：					强制列出隐藏的项。
+							Get-ChildItem -Path C:\Windows -Force
+	-Exclude:				排除项。
+							Get-ChildItem -Path C:\WINDOWS\System32\w*32*.dll -Exclude *[9516]* //忽略名称中含有任意这些数字的文件
+	*：						匹配零个或多个出现的任何字符。
+							Get-ChildItem -Path C:\Windows\x*
+	?：						完全匹配一个字符。
+							Get-ChildItem -Path C:\Windows\?????.log
+	[]：						括起一组要匹配的字符。
+
+
+	举例：
+		Get-Command -Name '*Process' 
+		Get-Command -Verb Get -Noun U*
+		Get-Command | Select-Object -First 3
+		Get-Process | Where-Object {$_.ProcessName -like "p*"}
+		Get-Process | Get-Member
+		Get-Process | Get-Member -MemberType Method
+		Get-Process | Get-Member | Select-Object TypeName -Unique
+		Get-Process | Get-Member | Select-Object Name, Definition
+		Get-Command -ParameterType Process
+		
+	
+	
+Git:
+	分区：工作区、暂存区、本地版本区、远程仓库。
+	git add:		工作区 -> 暂存区。
+	git commit:		暂存区 -> 本地版本区。
+	git push：		本地版本区 -> 远程仓库。
+	git pull:		拉取远程仓库（相当于git fetch + git merge）。
+	git fetch：		查看远程仓库是否更新，有更新则下载。
+	git merge：		合并分支。
+	git status：		查看工作区状态。
+	git diff：		查看具体修改内容。
+	git checkout：	切换分支（-b 创建并切换到新分支）。
+	git branch：		查看/创建分支（-d：删除分支，-M：重命名分支）。
+	git reset：		撤销本地提交（--soft：保留本地修改，--hard：不保留本地修改）。
+	git revert：		撤销远程操作（回滚）。
+	git config：		配置（--global user.name/email：设置用户信息）。
+	git log：		查看git日志。
+	
+	远程+上游相关操作：
+	git remote -v						显示Git保存的远程仓库的简写名与其对应的 URL。
+	git remote rename branch_a branch_b	修改一个远程仓库的简写名<shortname>。
+										（会修改你所有远程跟踪的分支名字，那些过去引用 branch_a/master 的现在会引用 branch_b/master）
+	git remote remove paul				移除一个远程仓库。
+										（所有和这个远程仓库相关的远程跟踪分支以及配置信息也会一起被删除）
+	git remote show <remote>			查看某一个远程仓库的更多信息。
+										（甚至包括你运行什么命令会推送到这个远程仓库上）
+	git push -u origin main				推送至上游的主分支。
+										（-u：设置上游，相当于--set-upstream-to）
+	git branch --unset-upstream			取消分支上游。
+	git remote add <shortname> <url> 	添加一个新的远程 Git 仓库，同时指定一个方便使用的简写名<shortname>。
+										（之后在本地可以通过<shortname>/master访问主分支）
+										
+	注意事项：
+	如果你使用 clone 命令克隆了一个仓库，命令会自动将其添加为远程仓库并默认简写名 <shortname> = origin 。
+	默认情况下，clone 命令会自动设置本地 master 分支跟踪 clone 的远程仓库的 master 分支（或其它名字的默认分支）。
+	运行 git pull 通常会从最初克隆的服务器上抓取数据并自动尝试合并到当前所在的分支。
+	
+	
+
+目前进度：
+	是否可以写CMakeLists.txt？
+	最简单的。
+	
+	是否可以写vcpkg.json？
+	是。
+	
+	是否可以写portfile.cmake？
+	是。
+	
+	是否熟悉生成补丁的流程？
+	是（git diff | out-file -enc ascii fix-.patch）。
+	
+	是否可以submit一个PR？
+	是（Git命令行/TortoiseGit）。
+	
+	是否可以测试一个关于feature的PR？
+	是（x86-windows/x64-windows/x64-windows-static/x64-linux）。
+	
+
+
+
+已解决的问题：
+Error:         
+	!  [remote rejected]  dev/MeiMei/fix_test_issue -> dev dev/MeiMei/fix_test_issue   (permission denied). 
+Solution:   
+	git config --global --unset credential.helper(git config --system --unset credential.helper) 
+	git config --global credential.useHttpPath true
+
+
+
+	
+我的疑问：
+	在Linux中指定编译器用什么命令？	
+	VS和MSBuild、MSVC 的关系？
+	packages和installed内容重复？
