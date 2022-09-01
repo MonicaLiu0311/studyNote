@@ -128,7 +128,6 @@ gcc命令：
 
 
 
-
 make命令：
 	<target> : <prerequisites> 
 	[tab]  <commands>
