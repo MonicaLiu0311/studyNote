@@ -1,0 +1,209 @@
+在linux系统下：
+	pkg-config.pc： 声明port的路径、名称、版本号...
+	Configure文件运行后的一些东西需要传给Makefile文件
+	mesonbuild偏配置，vcpkglib.vcxproj是纯配置
+	CMake偏向函数式
+
+
+在CMake中，直接导出就行。（头文件有些是私有的，有些公有的） 
+
+
+CMake important functions：
+	add_library: 把target生成一个动态库/静态库
+
+	add_executable: 把target生成一个可执行文件
+
+	include_directories/target_include_directories: 把一些header的路径加入编译环节，方便我们在代码环境中能直接include到
+
+	link_libraries/target_link_librarirs: 希望使用第三方库，我们需要将第三方库的名称导进来，方便链接的时候用
+	target_link_librarirs(sample_exe sample_target)：所有target开头的functions的依赖关系是通过target_link_librarirs传递的，
+													内部的作用过程其实是找到target_link_librarirs中指定的target信息放到exe中
+
+	add_definitions/add_compile_options/target_compile_definitions: 在代码配置中有一些options，这些options关乎代码配置中的宏，然我们启用/禁用一些宏
+		add_compile_options: 还可以警用一些警告
+		target_compile_definitions： 仅针对代码中的一些宏
+		
+	find_library/find_program/find_path: 第三方库提供了头文件和库，我们找到它后一般用include_directories/target_include_directories将它加入项目
+		find_path: 在CMake中可以找任何文件的路径
+		find_library: 找第三库的lib（静态库肯定生成lib，动态库可能生成lib），在链接过程中将lib加入链接队列
+		find_program: 找可执行文件，在编译当前target之前可能用工具生成一些resource和代码文件，这个时候就要用find_program去找一些工具，找到了就传入命令行生成需要的东西
+		find_package: 在特定路径下找文件projectName-config.cmake/projectNameConfig.cmake（对大小写敏感），如果找到了，就会执行配置文件的操作，
+					  一般来讲，配置文件中会add library，然后library会设置成一个interface/import，意思就是导入的库，然后就可以直接在项目中用了，
+					  projectName-configure.cmake会调用projectName-target.cmake
+
+
+	因为一个项目中可能有多个target，funtions前面有target的，说明在使用这个function的时候要指定对哪个target起作用，没有target，说明对这行代码下的所有target起作用。
+	所有target开头的function都可以换成add开头，只是作用范围变成这行代码之后的所有target。
+	target_link_librarirs(sample_exe sample_target)
+	target开头的依赖关系是通过target_link_librarirs传递的，内部的作用过程其实是找到target_link_librarirs中指定的target信息放到exe中
+	
+
+CMake other functions：
+	project: 项目名称
+	options: 提供选项/默认值...
+	message： 打印信息
+	configure_file: 在Linux下也有很多地方用，一个配置文件/头文件中有一些宏，在configure过程中将 @宏@ 设为0/1，
+					configure_file就是根据当前的CMake配置环境中的变量把宏替换掉，然后生成config.cmake文件
+	file: 可以做很多事情...
+	list: 对队列中的items做操作...
+	set: 给变量设置值
+	
+	
+Common macros:
+	WIN32
+	UNIX
+	APPLE
+	$ENV{VAR}: 打印一些环境变量，支持获取、写环境变量
+	CMAKE_SIZEOF_VOID_P: 根据当前指针大小判断系统是32为还是64位
+	CMAKE_CUURRENT_LIST_DIR:CMake配置文件的绝对路径
+	CMAKE_CURRENT_BINARY_DIR: 当前target生成的路径
+	BUILD_SHARED_LIBS: ON是动态库，OFF是静态库
+	CMAKE_SYSTEM_PROCESSOR: 当前系统是什么，也可以判定系统的发行版
+	CMAKE_BUILD_TYPE: DEBUG/RELEASE
+	CAMKE_DEBUG_POSTFIX: 给生成文件加前缀
+	
+	
+Toolchain（一个标准的Toolchain至少包含三个变量）:
+	CMAKE_SYSTEM_NAME: windows、linus、osx等等，VCPKG中是用的比较多，VCPKG把library生成出来后，大部分会提供一些CMake配置文件，如何去使用这些配置文件，根据Toolchain去设置
+	CMAKE_SYSTEM_PROCESSOR:
+	CMAKE_<LANG>_COMPILER:
+	
+	
+CMAKE options
+	-G <Generator>
+	-D <Options>
+		CMAKE_BUID_TYPE=<DEBUG/RELEASE>
+		CMAKE_INSTALL_PREFIX=<PATH>
+		CMAKE_TOOLCHAIN_FILE=<PATH>
+		CMAKE_<LANG>_COMPILER=<FLAGS>
+		...
+
+
+完成一次构建最多有三个步骤：
+	Configure： 会根据CMakeLists.txt和.cmake文件生成一个对应于generator的配置文件（.vcxprj和.sln）；
+	Build： generator根据配置文件生成一个binary；
+	Install： CMake会把binary根据CMakeLists.txt语句安装到指定位置。
+	
+
+在Windows环境下，静态库默认导出所有符号。
+
+vcpkg：我们保证提供正常的lib、dll、include就够了。
+
+静态库的用法记得在CMakeSetting.json中加VCPKG_TARGET_TRIPLET（如："x64-windows-static"） 
+
+
+
+Linux安装这三个 
+udo apt-get install unzip
+sudo apt-get install zip
+sudo apt-get install g++
+
+
+
+gcc命令：
+	-E：仅执行编译预处理（.c -> .i）；
+	-S：将C代码转换为汇编代码（.c -> .S）；
+	-c：仅执行编译操作，不进行连接操作（.c -> .o）；
+	-o：指定生成输出文件名称(不指定就是 a.out)；
+
+	-C：预处理时不删除注释信息，常与-E同时使用；
+	-L[dir]：编译的时候，指定搜索库的路径。比如你自己的库，可以用它指定目录，不然编译器将只在标准库的目录找。
+	-l[library]：用来指定程序要链接的库，加入头文件目录，-l参数紧接着就是库名；例如：gcc -lcurses hello.c  ；
+	-I[dir]：寻找头文件的目录，在你使用#include "file"的时候，gcc/g++会先在当前目录查找你所指定的头文件，如果没有找到，会到系统默认的头文件目录找。
+	-O0/O1/O2/O3：编译器优化选项分为4个级别，整个源代码在编译链接时进行优化处理，处理速度会变慢；-O0表示没有优化，-O1为缺省值，建议使用-O2/-O3优化级别最高。
+
+	-static：生成静态库文件;
+	-shared：生成动态库文件，例如： g++ -shared hellp.cpp -o libhello.so；
+	-Wl,-Bstatic：告诉链接器ld只链接静态库，如果只存在动态链接库，则链接器报错。
+	-Wl,-Bdynamic：告诉链接器ld优先使用动态链接库，如果只存在静态链接库，则使用静态链接库。
+
+	-wall：显示警告信息；
+	-include [file]：相当于“#include”，用于包含某个代码,简单来说,就是编译某个文件时需要另一个文件。例如: gcc hello.c -include /root/pianopan.h  ；
+	-pedantic：选项能够帮助程序员发现一些不符合 ANSI/ISO C标准的代码，但不是全部；
+	-Werror：把所有警告转换为错误，GCC会在所有产生警告的地方停止编译，迫使程序员对自己的代码进行修改；
+	-w：关闭所有警告,建议不要使用此项。
+
+	-g：调试源代码时必须加入这个选项；
+
+
+
+
+
+make命令：
+	<target> : <prerequisites> 
+	[tab]  <commands>
+
+	-b：忽略兼容性；
+	-B：让所有目标总是重新建立；
+	-C<目录>：更改为指定的目录；
+	-d：打印调试信息；
+	--debug=<标记>：显示调试信息的各种类型；
+	-e：环境变量覆盖makefile；
+	-f<文件>：将其它文件看作 Makefile；
+	-j<作业编号>：指定工作编号的作业一次完成；
+	-k：当有些目标不能下去时，继续执行下去；
+	-i：从命令中忽略错误；
+	-I<目录>：搜索指定目录中的包含的makefile；
+	-l<负载>：不要启动多个任务，除非低于指定负载；
+	-L：在符号链接和目标之间使用最后的修改时间；
+	-n：实际上不运行任何命令，只显示出来；
+	-o<文件>：不编译指定的文件；
+	-p：显示make的内部数据库；
+	-q：安静模式；
+	-r：禁用内置隐含规则；
+	-R:禁用内置变量设置；
+	-s：不回显命令；
+	-S：关闭-k；
+	-t：创建目标，而不是改造他们；
+	-w：显示当前目录；
+	-W<文件>：指定目标文件；
+	--no-print-directory：关闭-w，即使它被打开；
+	--warn-undefined-variables：当一个未定义的变量被引用时发出浸膏。
+
+
+
+
+patch:
+	./vcpkg x-add-version zlib  就相当于执行了  git rev-parse HEAD:ports/g3log （另外：git ls-tree {id} 会列出与这个id相关的）
+	
+
+git：
+	处理commit冲突 ：git rebase -i {id}
+		用git log查看日志，找到需要合并的两条commit的前一条的id，然后用git rebase -i {id} 执行合并
+		跳到合并界面，再最后一条commit之前把pick改为squash，然后用:wq保存并退出
+		跳到新的界面，删掉需要Merge的两条commit，然后写上新的commit名称，然后用:wq保存并退出
+
+
+
+
+
+# ******************starting printing sqlite3 portfile.cmake info*********************
+# -- OUT_SOURCE_PATH:
+# -- SOURCE_PATH: 					vcpkg/buildtrees/sqlite3/src/3390100-b07edb9ecf.clean
+# -- CURRENT_HOST_INSTALLED_DIR:	vcpkg/installed/x64-windows
+# -- CURRENT_INSTALLED_DIR:			vcpkg/installed/x86-windows
+# -- CURRENT_PACKAGES_DIR: 			vcpkg/packages/sqlite3_x86-windows
+# -- CURRENT_BUILDTREES_DIR: 		vcpkg/buildtrees/sqlite3
+# -- CURRENT_PORT_DIR:				vcpkg/ports/sqlite3
+# -- DOWNLOADS:						vcpkg/downloads
+
+# -- CMAKE_CURRENT_LIST_DIR: 		vcpkg/ports/sqlite3
+# -- CMAKE_CURRENT_SOURCE_DIR:		vcpkg
+# -- CMAKE_CURRENT_BINARY_DIR: 		vcpkg
+# -- CMAKE_INSTALL_DATAROOTDIR:
+# -- CMAKE_INSTALL_PREFIX:
+# -- CMAKE_SYSTEM_PROCESSOR:
+# -- CMAKE_DEBUG_POSTFIX:
+
+# -- VCPKG_TARGET_ARCHITECTURE:		x86
+# -- TARGET_TRIPLET: 				x86-windows
+
+# -- OUT_FEATURE_OPTIONS:
+# -- FEATURE_OPTIONS: 				-DENABLE_FTS3=OFF;-DENABLE_FTS4=OFF;-DENABLE_FTS5=OFF;-DENABLE_MEMSYS3=OFF;
+									-DENABLE_MEMSYS5=OFF;-DENABLE_MATH_FUNCTION=OFF;-DENABLE_LIMIT=OFF;
+									-DENABLE_RTREE=OFF;-DENABLE_SESSION=OFF;-DENABLE_OMIT_LOAD_EXT=OFF;
+									-DWITH_GEOPOLY=OFF;-DWITH_JSON1=OFF;-DWITH_ZLIB=OFF;-DSQLITE3_SKIP_TOOLS=ON
+
+# -- PACKAGE_NAME:
+# -- CONFIG_PATH:
+# -- VCPKG_HOST_EXECUTABLE_SUFFIX: 	.exe
