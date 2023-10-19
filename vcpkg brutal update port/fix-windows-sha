@@ -1,6 +1,0 @@
-#!/bin/bash
-./vcpkg.exe install $1|tee vcpkglog.txt
-rg 'Actual hash' vcpkglog.txt|cut -c 14-141 
-sha=`rg 'Actual hash' vcpkglog.txt|cut -c 14-141` 
-echo ${sha}
-sd "SHA512 .*"     "SHA512 ${sha}"         ports/$1/portfile.cmake 

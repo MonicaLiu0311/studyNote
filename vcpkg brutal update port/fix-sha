@@ -1,6 +1,8 @@
 #!/bin/bash
+sd "SHA512 .*"     "SHA512 0"         ports/$1/portfile.cmake 
 ./vcpkg install $1 --binarysource=clear --recurse|tee vcpkglog.txt
-sha=`rg 'Actual hash' vcpkglog.txt|cut -c 22-149| head -n1` 
+sha=`rg 'Actual hash' vcpkglog.txt|cut -c 14-141| head -n1` 
+
 if [ $sha ]
 then
   sd "SHA512 .*"     "SHA512 ${sha}"         ports/$1/portfile.cmake 
