@@ -1,0 +1,26 @@
+{
+  "default-registry": {
+    "kind": "git",
+    "repository": "https://github.com/Microsoft/vcpkg",
+    "baseline": "8daf70c56ba9581f5251a5d4675eb771b6b34957"
+  },
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/MonicaLiu0311/vcpkg-registry.git",
+      "baseline": "082178ed8963ddebc69d4a78c2aede3fc841e277",
+      "packages": ["beicode"]
+    },
+    {
+      "kind": "filesystem",
+      "baseline": "2023-03-07",
+      "path": "E:/registry/filesystem-registry",
+      "packages": [ "beison"]
+    },
+    {
+      "kind": "builtin",
+      "baseline": "8daf70c56ba9581f5251a5d4675eb771b6b34957",
+      "packages": ["fmt"]
+    }
+  ]
+}
