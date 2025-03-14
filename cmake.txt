@@ -1,0 +1,89 @@
+CMake是什么？干什么？怎么用？
+	CMake是配置器。
+	Cmake作用： 根据源文件和CMakeLists.txt，跨IDE生成对应的工程文件/解决方案/Makefile，然后就可以使用make指令快速编译生成exe。
+	makefile关系到了整个工程的编译规则--“自动化编译”。
+
+
+cmake常用函数：
+	add_library: 把target生成一个动态库/静态库
+	
+	add_executable: 把target生成一个可执行文件
+	
+	include_directories/target_include_directories: 把一些header的路径加入编译环节，方便我们在代码环境中能直接include到
+		
+	target_link_directories: 指定链接器在链接给定目标时应在其中搜索库的路径
+	
+	link_libraries/target_link_librarirs: 希望使用第三方库，我们需要将第三方库的名称导进来，方便链接的时候用
+		Target_link_librarirs(sample_exe sample_target)：所有target开头的functions的依赖关系是通过target_link_librarirs传递的，
+										    内部的作用过程其实是找到target_link_librarirs中指定的target信息放到exe中
+	
+	add_definitions/add_compile_options/target_compile_definitions: 在代码配置中有一些options，这些options关乎代码配置中的宏，然我们启用/禁用一些宏
+		add_compile_options: 还可以警用一些警告
+		target_compile_definitions： 仅针对代码中的一些宏
+			
+	find_library/find_program/find_path: 第三方库提供了头文件和库，我们找到它后一般用include_directories/target_include_directories将它加入项目
+		find_path: 在CMake中可以找任何文件的路径（vcpkg中找header-only的port一般用它）
+		find_library: 找第三库的lib（静态库肯定生成lib，动态库可能生成lib），在链接过程中将lib加入链接队列（vcpkg中找除了find_package和find_path之外的port路径）
+		find_program: 找可执行文件，在编译当前target之前可能用工具生成一些resource和代码文件，这个时候就要用find_program去找一些工具，找到了就传入命令行生成需要的东西
+		find_package: 在特定路径下找文件projectName-config.cmake/projectNameConfig.cmake（对大小写敏感），如果找到了，就会执行配置文件的操作，
+				     一般来讲，配置文件中会add library，然后library会设置成一个interface/import，意思就是导入的库，然后就可以直接在项目中用了，
+				     projectName-configure.cmake会调用projectName-target.cmake
+	
+	
+	因为一个项目中可能有多个target，funtions前面有target的，说明在使用这个function的时候要指定对哪个target起作用，没有target，说明对这行代码下的所有target起作用。
+	所有target开头的function都可以换成add开头，只是作用范围变成这行代码之后的所有target。
+	target_link_librarirs(sample_exe sample_target)
+	target开头的依赖关系是通过target_link_librarirs传递的，内部的作用过程其实是找到target_link_librarirs中指定的target信息放到exe中
+		
+	
+	project: 项目名称
+	options: 提供选项/默认值...
+	message： 打印信息
+	configure_file: 在Linux下也有很多地方用，一个配置文件/头文件中有一些宏，在configure过程中将 @宏@ 设为0/1，
+			      configure_file就是根据当前的CMake配置环境中的变量把宏替换掉，然后生成config.cmake文件
+	file: 可以做很多事情...
+	list: 对队列中的items做操作...
+	set: 给变量设置值
+	
+	
+	CXX_VISIBILITY_PRESET 和 VISIBILITY_INLINES_HIDDEN：能用于为目标添加合适的编译flags
+		CMAKE_CXX_VISIBILITY_PRESET：影响普通函数，决定编译 flags 的符号可见性，该属性影响所有类型目标的源编译。hiddden 使所有符号默认不导出
+		CMAKE_VISIBILITY_INLINES_HIDDEN：影响内联函数，决定是否添加编译 flags 以隐藏内联函数的符号，与编译选项-fvisibility-inlines-hidden有关。该属性影响所有类型目标的源编译。
+	generate_export_header(test) ：为 test 导出宏定义，生成的文件名为test_export.h，路径为 ${CMAKE_CURRENT_BINARY_DIR}
+		包含宏定义 SOMELIB_EXPORT/SOMELIB_NO_EXPORT/SOMELIB_DEPRECATED/SOMELIB_DEPRECATED_EXPORT/SOMELIB_DEPRECATED_NO_EXPORT
+		如果同样的源被用于创建 shared 和 static 库，大写的 TEST_STATIC_DEFIN  应该被用于构建该 static 库
+		如果指定了 DEFINE_NO_DEPRECATED，那么一个宏 TEST_NO_DEPRECATED 将会被定义。该宏能用于从预处理输出中移除 deprecated 代码
+	
+	
+	
+CMake 查找库: find_package VS pkg_check_modules
+
+	如果编译软件使用了外部库，事先并不知道它的头文件和链接库的位置，得在编译和链接命令中加上包含它们的查找路径，CMake 使用 find_package 命令来解决这个问题。
+	
+	FIND_PACKAGE( <name> [version] [EXACT] [QUIET] [NO_MODULE] [ [ REQUIRED | COMPONENTS ] [ componets... ] ] )
+		> 这条命令执行后，CMake 会到变量 CMAKE_MODULE_PATH 指示的目录下查找文件 Findname.cmake 并执行；
+		> 只要找到包，就会定义下面这些变量（都在 Findname.cmake 文件中设置）：
+			<NAME>_FOUND
+			<NAME>_INCLUDE_DIRS or <NAME>_INCLUDES
+			<NAME>_LIBRARIES or <NAME>_LIBRARIES or <NAME>_LIBS
+			<NAME>_DEFINITIONS
+		> 要使用库name，我们在顶层目录中的 CMakeLists.txt 文件中，检查变量 NAME_FOUND 来确定包是否被找到（大部分包的这些变量中的包名是全大写的，有些包则使用包的实际大小写）
+		> 如果找到这个包，我们用 NAME_INCLUDE_DIRS 调用 include_directories() 命令，用 NAME_LIBRARIES 调用 target_link_libraries() 命令。
+		
+	pkg_check_modules
+		> pkg_check_modules 是 CMake 自己的 pkg-config 模块 的一个用来简化的封装：
+			你不用再检查 CMake 的版本，加载合适的模块、检查是否被加载、等等，
+			参数和传给 find_package 的一样： 先是待返回变量的前缀，然后是包名（pkg-config 的）。这样就定义了<prefix>_INCLUDE_DIRS和其他的这类变量，后续的用法就与 find_package 一致。
+		> pkg_check_modules 实质上是检测系统中的 pkg-config 是否存在指定的 .pc 文件:
+			C/C++编译器需要的输入参数
+			链接器需要的输入参数
+			已安装软件包的版本信息
+			pkg-config 环境变量 PKG_CONFIG_PATH 的搜索路径是： ../lib/pkgconfig
+			
+			
+	find_library 和 find_path 适用于所有 port，就是 Cmake 最基础的查找库的方式
+		find_path(NETTLE_INCLUDE_PATH "nettle/hmac.h" REQUIRED)
+		find_library(NETTLE_LIBRARY_PATH NAMES nettle REQUIRED) 
+		target_include_directories(main PRIVATE ${NETTLE_INCLUDE_PATH})
+		target_link_libraries(main PRIVATE ${NETTLE_LIBRARY_PATH})
+

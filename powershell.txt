@@ -1,0 +1,52 @@
+PowerShell：
+	PowerShell兼容所有传统CMD命令。
+	Get-Verb:				返回谓词列表。
+	Get-Command：			别名：gcm，查看所有命令列表。
+	get-process:			别名：ps，查找进程, 可以通过进程名称或者进程ID来获取特定进程
+	Get-Member：				基于对象的输出上运行，能够发现可用于命令的对象、属性和方法。
+	Get-help：				别名：help，说明命令的各个部分。
+	Get-Location：			别名：pwd, 获取当前位置。
+	Get-ChildItem：			别名：ls/dir, 列出文件夹下所有文件。
+	Get-History：			别名：history/h，列出之前的操作命令。
+	Get-date：				别名：date，获取系统当前时间。
+	Get-content：			别名：cat, 输出文件内容到控制台。
+	Get-Alias：				查看当前会话中命令别名。
+	Get-Variable：			查看当前会话中的变量信息。
+	ls [variable]:			查找正在使用的变量。	
+	Set-Location [dir]：		设置当前位置。
+	Select-Object：			筛选器，选取特定的属性。如： -First。
+	Where-Object：			表达式筛选器。如： {$_.ProcessName -Like "p*"}
+	New-item [dir/file]：	别名：ni, 创建一个新的文件夹/文件。	
+	Remove-item	[dir/file]：	别名： rm/del, 删除文件夹/文件。
+	Rename-item [file]:		重命名文件。
+	Copy-item [file]:		别名：cp/copy, 复制文件。
+	Move-item [file]:		移动文件。
+	-Path：					在指定目录操作。
+	-Recurse:				列出所有包含的项。
+							Get-ChildItem -Path C:\WINDOWS -Recurse //列出指定目录下的所有文件，包括子目录中文件
+							Get-ChildItem -Recurse //列出当前目录下的所有文件，包括子目录中的文件
+	-Name：					按名称筛选项。
+							Get-ChildItem -Name //列出当前目录下的指定文件，显示文件详细信息
+	-Noun：					按名词筛选。
+	-ParameType：			按类型筛选。
+	-Force：					强制列出隐藏的项。
+							Get-ChildItem -Path C:\Windows -Force
+	-Exclude:				排除项。
+							Get-ChildItem -Path C:\WINDOWS\System32\w*32*.dll -Exclude *[9516]* //忽略名称中含有任意这些数字的文件
+	*：						匹配零个或多个出现的任何字符。
+							Get-ChildItem -Path C:\Windows\x*
+	?：						完全匹配一个字符。
+							Get-ChildItem -Path C:\Windows\?????.log
+	[]：						括起一组要匹配的字符。
+
+
+	举例：
+		Get-Command -Name '*Process' 
+		Get-Command -Verb Get -Noun U*
+		Get-Command | Select-Object -First 3
+		Get-Process | Where-Object {$_.ProcessName -like "p*"}
+		Get-Process | Get-Member
+		Get-Process | Get-Member -MemberType Method
+		Get-Process | Get-Member | Select-Object TypeName -Unique
+		Get-Process | Get-Member | Select-Object Name, Definition
+		Get-Command -ParameterType Process

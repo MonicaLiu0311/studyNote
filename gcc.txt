@@ -1,0 +1,65 @@
+GNU是什么？干什么？怎么用？
+	GNU 计划最终实现了“打造一套自由、开源的操作系统”的初衷，但该操作系统并非完全产自 GNU 计划，GNU/Linux 操作系统（人们更习惯称为 Linux 操作系统）。
+	一系列能进行人机交互操作并运行其它程序的程序。
+
+
+GCC是什么？干什么？怎么用？
+	全拼为GNU Compiler Collection，是一款功能强大的、性能优越的多平台编译器。
+	gcc编译器能将C、C++等语言源程序和目标程序编译、链接成可执行文件。
+	在使用GCC编译器的时候，我们必须给出一系列必要的调用参数和文件名称，介绍一下几个基本常用的参数
+
+
+gcc和g++的主要区别
+	# 对于 *.c和*.cpp文件，gcc分别当做c和cpp文件编译（c和cpp的语法强度是不一样的）。
+	# 对于 *.c和*.cpp文件，g++则统一当做cpp文件编译。
+	# 使用g++编译文件时，g++会自动链接标准库STL，而gcc不会自动链接STL。
+	# gcc在编译C文件时，可使用的预定义宏是比较少的。
+	# 在用gcc编译c++文件时，为了能够使用STL，需要加参数 –lstdc++ ，但这并不代表 gcc –lstdc++ 和 g++等价。
+	# gcc在编译cpp文件时/g++在编译c文件和cpp文件时（这时候gcc和g++调用的都是cpp文件的编译器），会加入一些额外的宏，这些宏如下：
+		#define __GXX_WEAK__ 1
+		#define __cplusplus 1
+		#define __DEPRECATED 1
+		#define __GNUG__ 4
+		#define __EXCEPTIONS 1
+		#define __private_extern__ extern6
+
+
+gcc命令：
+	-E：仅执行编译预处理（.c -> .i）；
+	-S：将C代码转换为汇编代码（.c -> .S）；
+	-c：仅执行编译操作，不进行连接操作（.c -> .o）；
+	-o：指定生成输出文件名称(不指定就是 a.out)；
+
+	-C：预处理时不删除注释信息，常与-E同时使用；
+	-x[language]：指明使用的编程语言。允许的语言包括：C，C++，assembler，nonenone意味着恢复默认行为，即根据文件拓展名猜测源文件的语言。
+	
+	-L[dir]：编译的时候，指定搜索库的路径。比如你自己的库，可以用它指定目录，不然编译器将只在标准库的目录找。
+	-l[library]：用来指定程序要链接的库，加入头文件目录，-l参数紧接着就是库名；例如：gcc -lcurses hello.c  ；
+	-I[dir]：寻找头文件的目录，在你使用#include "file"的时候，gcc/g++会先在当前目录查找你所指定的头文件，如果没有找到，会到系统默认的头文件目录找。
+	-include [file]：相当于“#include”，用于包含某个代码,简单来说,就是编译某个文件时需要另一个文件。例如: gcc hello.c -include /root/pianopan.h  ；
+	-isysroot [dir]：该选项和 -sysroot 选项差不多，但只用于搜索头文件。
+	--sysroot=dir：用 dir 作为头文件和库文件的逻辑根目录。
+			    例如，正常情况下，如果编译器在 /usr/include 搜索头文件，在 /usr/lib 下搜索库文件，它将用 dir/usr/include 和 dir/usr/lib 替代原来的相应路径。
+			    如果你同时使用 了 -isysroot 选项，则 -sysroot 会应用于库文件的搜索而 -isysroot 会用于搜索头文件。
+	-pthread：与POSIX线程库链接。GNU / Linux目标，大多数其他Unix派生以及x86 Cygwin和MinGW目标都支持此选项。
+		       在某些目标上，此选项还会为预处理器设置标志，因此应始终将其用于编译和链接。
+	--work-tree=. 
+	--git-dir=.git
+	
+	
+	-O0/O1/O2/O3：编译器优化选项分为4个级别，整个源代码在编译链接时进行优化处理，处理速度会变慢；-O0表示没有优化，-O1为缺省值，建议使用-O2/-O3优化级别最高。
+
+	-static：生成静态库文件;
+	-shared：生成动态库文件，例如： g++ -shared hellp.cpp -o libhello.so；
+	-Wl,-Bstatic：告诉链接器ld只链接静态库，如果只存在动态链接库，则链接器报错。
+	-Wl,-Bdynamic：告诉链接器ld优先使用动态链接库，如果只存在静态链接库，则使用静态链接库。
+
+	-wall：显示警告信息；
+	-pedantic：选项能够帮助程序员发现一些不符合 ANSI/ISO C标准的代码，但不是全部；
+	-Werror：把所有警告转换为错误，GCC会在所有产生警告的地方停止编译，迫使程序员对自己的代码进行修改；
+	-w：关闭所有警告,建议不要使用此项。
+	--version：显示gcc版本号和版权信息。
+	-v：打印较多信息，显示编译器调动的程序。
+
+	-g：调试源代码时必须加入这个选项；
+	-fpic/-fPIC：用于编译动态库的选项集。

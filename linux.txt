@@ -1,0 +1,39 @@
+sudo			提升运行的权限,以系统管理者的身份执行指令（可以理解为假扮root的身份）
+sudo reboot		获取超级管理员权限
+apt-get 			广受欢迎的命令行工具，会自动检测并安装依赖（软件包比较成熟）
+				最常用的 Linux 包管理命令都被分散在了 apt-get、apt-cache 和 apt-config 这三条命令当中
+apt 			为了解决命令过于分散的问题，简单理解就是 apt = apt-get + apt-cache + apt-config 中最常用命令选项的集合。
+
+apt-get 执行原理：
+Reading package lists：		这就是从/etc/apt/sources.list中检索可用的源中是否有这个软件包
+Building dependency tree：	生成软件依赖树，将需要的依赖包提前列出来，在安装所需软件之前进行安装
+
+为什么apt-get比vcpkg更快？
+apt-get 对硬件资源的要求不高。它消耗更少的内存并且运行速度更快。
+
+Linux安装这三个 
+sudo apt-get install unzip
+sudo apt-get install zip
+sudo apt-get install g++
+
+查找linux上的vcpkg缓存文件
+root@monica003:/# sudo find / -type d -name ".vcpkg"
+/root/.vcpkg
+/home/vliumonica/.vcpkg
+
+查看磁盘占用
+df -h
+
+要查看挂载在 /dev/sda 上的文件系统的权限（/dev/sda       1006G   94G  861G  10% /home/vliumonica）
+df -T /dev/sda
+ls -la /home/vliumonica
+
+把/home/monica下的所有文件的操作权限都给monica和root
+sudo chown -R monica:root /home/monica
+sudo chmod -R u+rwx /home/monica
+如果是系统文件夹可能会修改权限失败，用下面这个命令
+sudo chmod 777 /mnt
+
+
+设置一个全局的环境变量，使得无论是 root 用户还是其他用户，都能共享相同的设置
+sudo vim /etc/environment

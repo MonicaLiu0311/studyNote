@@ -1,0 +1,63 @@
+Visual Studio是什么？
+	VS是一个基本完整的开发工具集，它包括了整个软件生命周期中所需要的大部分工具，如配置工具+文本编辑器+编译器等。
+	Visual Studio IDE 可以编辑、调试和生成代码。
+
+MSVC是什么？干什么？怎么用？
+	全称Microsoft Visual C++ ，是C/C++的编译器，后来变成Visual Studio的一部分。
+	编译器生成通用对象文件格式对象 (.obj)，链接器生成可执行文件 (.exe) 或动态链接库 (DLL)。
+
+MSBuild是什么？干什么？怎么用？
+	MSBuild是一套构建工具，用于帮助软件产品创建流程的自动化，包括编译源代码、打包、测试、部署和创建文档，后来变成Visual Studio的一部分，但不依赖VS。
+
+MSVC： 	vs的c/c++编译器
+.sln: 		msbuild解析.sln
+msbuild:	cl.exe,link.exe
+VS > MSBuild > MSVC > cl.exe, link.exe
+
+编译属性
+	Configuration(解決方案配置)
+	Platform(解決方案平台)
+	Rebuid(重新生成解决方案)
+	Clean(清理解决方案)
+	
+	用VS编译解决方案，我通过 项目属性 -Build 设置 Release和x86；
+	如果用脚本直接调用MSBuild编译，添加下面的参数 /p:Configuration=Release;Platform=x86 /target:Clean;Rebuild 。
+	
+	/Gz: 初始化内存等。
+
+判断VS的版本
+	判断VS的版本（在vcpkg中）
+	if(VCPKG_PLATFORM_TOOLSET STREQUAL "v140")
+	    set(msvc_year "2015")
+	elseif(VCPKG_PLATFORM_TOOLSET STREQUAL "v141")
+	    set(msvc_year "2017")
+	elseif(VCPKG_PLATFORM_TOOLSET STREQUAL "v142")
+	    set(msvc_year "2019")
+	elseif(VCPKG_PLATFORM_TOOLSET STREQUAL "v143")
+	    set(msvc_year "2022")
+	endif()
+	
+	
+	#判断MSVC的具体版本（在CMakeLists.txt中）
+	if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "19.31.30911.95")
+	        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:static_assert-")
+	    endif()
+	endif()
+	
+	
+	#判断MSVC的具体版本（在头文件中）
+	#if defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 193632528
+	    using xtime = _timespec64;
+	#endif
+
+	#打印CMakeList目录情况			
+	get_property(dirs DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+	message(FATAL_ERROR ">>>>>>>>>>>>>>>>>>>>> include_dirs=${dirs}") 
+	
+	#判断MSVC的具体版本（在CMakeLists.txt中）
+	if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+	    if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "19.31.30911.95")
+	        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:static_assert-")
+	    endif()
+endif()
