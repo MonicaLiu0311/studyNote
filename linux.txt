@@ -1,39 +1,241 @@
 sudo			提升运行的权限,以系统管理者的身份执行指令（可以理解为假扮root的身份）
 sudo reboot		获取超级管理员权限
-apt-get 			广受欢迎的命令行工具，会自动检测并安装依赖（软件包比较成熟）
+apt-get 		广受欢迎的命令行工具，会自动检测并安装依赖（软件包比较成熟）
 				最常用的 Linux 包管理命令都被分散在了 apt-get、apt-cache 和 apt-config 这三条命令当中
 apt 			为了解决命令过于分散的问题，简单理解就是 apt = apt-get + apt-cache + apt-config 中最常用命令选项的集合。
 
+
 apt-get 执行原理：
-Reading package lists：		这就是从/etc/apt/sources.list中检索可用的源中是否有这个软件包
-Building dependency tree：	生成软件依赖树，将需要的依赖包提前列出来，在安装所需软件之前进行安装
+    Reading package lists：		这就是从/etc/apt/sources.list中检索可用的源中是否有这个软件包
+    Building dependency tree：	生成软件依赖树，将需要的依赖包提前列出来，在安装所需软件之前进行安装
 
-为什么apt-get比vcpkg更快？
-apt-get 对硬件资源的要求不高。它消耗更少的内存并且运行速度更快。
 
-Linux安装这三个 
-sudo apt-get install unzip
-sudo apt-get install zip
-sudo apt-get install g++
+为什么 apt-get 比 vcpkg 更快？
+    apt-get 对硬件资源的要求不高。它消耗更少的内存并且运行速度更快。
 
-查找linux上的vcpkg缓存文件
-root@monica003:/# sudo find / -type d -name ".vcpkg"
-/root/.vcpkg
-/home/vliumonica/.vcpkg
 
-查看磁盘占用
-df -h
+查看磁盘占用 
+    df -h
 
 要查看挂载在 /dev/sda 上的文件系统的权限（/dev/sda       1006G   94G  861G  10% /home/vliumonica）
-df -T /dev/sda
-ls -la /home/vliumonica
+    df -T /dev/sda
+    ls -la /home/vliumonica
 
-把/home/monica下的所有文件的操作权限都给monica和root
-sudo chown -R monica:root /home/monica
-sudo chmod -R u+rwx /home/monica
+把 /home/monica 下的所有文件的操作权限都给 monica 
+    sudo chown -R monica /home/monica
+    sudo chmod -R u+rwx /home/monica
 如果是系统文件夹可能会修改权限失败，用下面这个命令
-sudo chmod 777 /mnt
+    sudo chmod 777 /mnt
 
 
 设置一个全局的环境变量，使得无论是 root 用户还是其他用户，都能共享相同的设置
-sudo vim /etc/environment
+    sudo vim /etc/environment
+
+linux 系统启动过程：
+    BIOS （Basic Input/Output System，基本输入输出系统） 开机自检，负责硬件初始化，直到操作系统接管硬件。
+    内核引导： 电源开机 - Bootloader（/boost）启动 - 加载Linux 内核 - 检查硬件（CPU、内存、磁盘）
+            拧动钥匙，汽车的点火系统启动，加载发动机，它会检查基本功能是否正常，比如油压、电池、燃油泵
+    运行 init ： init 进程运行（所有进程的起点） - 读取配置文件（旧/etc/inittab 新Systemd） - 启动系统级服务（挂载文件系统、日志服务、网络服务、加载驱动） - 单用户模式/多用户模式/图形界面（7个运行级别：0-6）
+               教练上车接管车辆控制，安排整车系统正常运作（检查仪表盘、调整座椅、打开车灯），决定要进入什么驾驶模式
+    系统初始化： init 进程调用多个系统级初始化脚本确保系统环境完整 - 挂载所有必要的文件系统（如 /proc、/sys、/dev） - 加载设备驱动程序 - 启动后台服务
+             教练会检查车内所有设备是否正常，比如刹车系统、空调、方向盘
+    建立终端： 通过 systemd/init 启动 getty 管理 tty
+            进入待命状态，，车门打开，等待乘客上车
+    用户登录系统： 输入用户名和密码 - 登录系统 - 使用 Linux
+               坐进车里，插入钥匙，然后踩下油门，正式开始驾驶
+    
+    /etc/systemd/system/default.target	系统的默认启动目标（替代 /etc/inittab）
+    /usr/lib/systemd/system/*.service	存放系统服务（Unit）配置文件
+    /etc/systemd/system/*.service	自定义的 systemd 服务
+    /etc/fstab	挂载文件系统
+    /etc/hostname	存储系统主机名
+    /etc/sysctl.conf	配置内核参数
+    /etc/modules-load.d/	需要加载的内核模块列表
+    
+linux 目录结构：
+    monica@monica:~$ ls /
+    bin  boot  dev  etc  home  lib  lib32  lib64  libx32  lost+found  media  mnt  opt  proc  root  run  sbin  snap  srv  sys  tmp  usr  var
+
+    /bin： Binaries 的缩写, 存放着最经常使用的命令，如 ls。
+    /boot： 存放的是启动 Linux 时使用的一些核心文件，包括一些连接文件以及镜像文件。
+    /dev ： Device 的缩写, 存放的是 Linux 的外部设备，在 Linux 中访问设备的方式和访问文件的方式是相同的。
+    /etc： Etcetera(等等) 的缩写,存放所有的系统管理所需要的配置文件和子目录。
+    /home： 用户的主目录，在 Linux 中，每个用户都有一个自己的目录，一般该目录名是以用户的账号命名的，如 monica。
+    /lib： Library 的缩写，存放着系统最基本的动态连接共享库，其作用类似于 Windows 里的 DLL 文件。几乎所有的应用程序都需要用到这些共享库。
+    /lost+found： 这个目录一般情况下是空的，当系统非法关机后，这里就存放了一些文件。
+    /media： 自动挂载，linux 系统会自动识别一些设备，例如U盘、光驱等等，当识别后，Linux 会把识别的设备挂载到这个目录下。
+    /mnt： 手动挂载，Mount 的缩写,系统提供该目录是为了让用户临时挂载别的文件系统的，我们可以将光驱挂载在 /mnt/ 上，然后进入该目录就可以查看光驱里的内容了。
+    /opt： optional 的缩写，这是给主机额外安装软件所摆放的目录。比如你安装一个 ORACLE 数据库则就可以放到这个目录下。默认是空的。
+    /proc： Processes 的缩写，是一种伪文件系统（也即虚拟文件系统），存储的是当前内核运行状态的一系列特殊文件，这个目录是一个虚拟的目录，它是系统内存的映射，我们可以通过直接访问这个目录来获取系统信息。
+           这个目录的内容不在硬盘上而是在内存里，我们也可以直接修改里面的某些文件，比如可以通过下面的命令来屏蔽主机的 ping 命令，使别人无法 ping 你的机器： echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_all
+    /root： 该目录为系统管理员，也称作超级权限者的用户主目录。
+    /sbin： s 就是 Super User 的意思，是 Superuser Binaries (超级用户的二进制文件) 的缩写，这里存放的是系统管理员使用的系统管理程序。
+    /srv： service 的缩写，该目录存放一些服务启动之后需要提取的数据。
+    /sys： 这是 Linux2.6 内核的一个很大的变化。该目录下安装了 2.6 内核中新出现的一个文件系统 sysfs 。
+          sysfs 文件系统集成了下面3种文件系统的信息：针对进程信息的 proc 文件系统、针对设备的 devfs 文件系统以及针对伪终端的 devpts 文件系统。
+          该文件系统是内核设备树的一个直观反映。当一个内核对象被创建的时候，对应的文件和目录也在内核对象子系统中被创建。
+    /tmp： temporary(临时) 的缩写，这个目录是用来存放一些临时文件的。
+    /usr： unix system resources(unix 系统资源) 的缩写，这是一个非常重要的目录，用户的很多应用程序和文件都放在这个目录下，类似于 windows 下的 program files 目录。
+    /usr/bin： 系统用户使用的应用程序。
+    /usr/sbin： 超级用户使用的比较高级的管理程序和系统守护程序。
+    /usr/src： 内核源代码默认的放置目录。
+    /var： variable(变量) 的缩写，这个目录中存放着在不断扩充着的东西，我们习惯将那些经常被修改的目录放在这个目录下。包括各种日志文件。
+    /run： 是一个临时文件系统，存储系统启动以来的信息。当系统重启时，这个目录下的文件应该被删掉或清除。如果你的系统上有 /var/run 目录，应该让它指向 run。
+
+    系统启动： /boot /etc /lib /sys
+    指令集合： /bin /sbin /usr/bin /usr/sbin
+    外部文件管理： /dev /media /mnt
+    临时文件： /lost+found /tmp /run
+    账户： /home /root /usr /usr ...
+    运行过程中要用： /var /proc
+    扩展用的： /opt /srv
+    扩展用的： /opt /srv
+
+linux 远程登录：
+    SSH： Secure Shell 的缩写，是一种安全的远程登录协议，用于在不安全的网络（如互联网）上，加密连接到远程服务器，以执行命令或传输文件。
+
+    SSH 的特点:
+        加密通信：防止数据被窃听或篡改
+        远程管理：可远程控制 Linux/Unix 服务器
+        端口转发：支持安全的端口转发和代理
+        
+        /etc/ssh/sshd_config	SSH 服务器配置
+        ~/.ssh/id_rsa	SSH 私钥
+        ~/.ssh/id_rsa.pub	SSH 公钥
+        ~/.ssh/known_hosts	已信任的远程主机列表
+        
+        连接远程服务器（cmd/powershell）： ssh user@remote_host
+        复制文件到远程服务器（使用 scp）： scp local_file user@remote_host:/remote/path/
+
+linux 文件基本属性：
+    更改文件属性：
+        chown (change owner) ： 修改所属用户与组。
+        chmod (change mode) ： 修改用户的权限。
+        chgrp (change group) ： 更改文件属组。
+    
+        chown [–R] 所有者 文件名
+        chown [-R] 所有者:属组名 文件名
+
+        chmod [-R] xyz 文件或目录
+        -R : 进行递归(recursive)的持续变更，以及连同次目录下的所有文件都会变更    
+        chmod u=rwx,g=rx,o=r 文件名
+        chmod  a-x 文件名
+        chmod  u+w 文件名
+        u 用户， g 组， o 其他； + 加入， - 除去， = 设定; a 全部。
+        
+        chgrp [-R] 属组名 文件名
+        -R：递归更改文件属组，就是在更改某个目录文件的属组时，如果加上 -R 的参数，那么该目录下的所有文件的属组都会更改。
+    
+    Linux 文件的基本权限就有九个： 分别是 owner/group/others 三种身份，各有自己的 read/write/execute 权限。
+    Linux文件属性有两种设置方法： 数字、符号， r:4， w:2， x:1。
+    每种身份各自的三个权限分数是需要累加的，例如当权限为： -rwxrwx--- 分数则是： owner = rwx = 4+2+1 = 7， group = rwx = 4+2+1 = 7， others= --- = 0+0+0 = 0。
+    
+    
+    使用 ll 或者 ls –l 命令来显示一个文件的属性以及文件所属的用户和组： 
+        monica@monica003:/mnt$ ls -l
+        total 24
+        -r--r--r-- 1 root       root         639 Mar 12 21:27 DATALOSS_WARNING_README.txt
+        drwx------ 2 root       root       16384 Mar 12 21:27 lost+found
+        drwxrwxr-x 2 vliumonica vliumonica  4096 Mar 18 01:58 test
+        
+        从左至右用 0-9 这些数字来表示。
+        第 0 位确定文件类型： d 目录， - 文件， l 链接文档(link file)， b 装置文件里面的可供储存的接口设备(可随机存取装置)， c 装置文件里面的串行端口设备例如键盘、鼠标(一次性读取装置)。
+        接下来的字符中，以三个为一组，且均为 rwx 的三个参数的组合，分别为属主权限、属组权限、其他用户权限： r 可读、 w 可写、 x 可执行， 如果没有权限，就会出现减号 - 。
+    
+    Linux 文件属主和属组： 在 Linux 系统中，用户是按组分类的，一个用户属于一个或多个组，Linux 系统按文件所有者、文件所有者同组用户和其他用户来规定了不同的文件访问权限。
+
+linux 文件与目录管理：
+    Linux 的目录结构为树状结构，最顶级的目录为根目录 /，其他目录通过挂载可以将它们添加到树中，通过解除挂载可以移除它们。
+    
+    处理目录的常用命令：
+        ls： list files， 列出目录及文件名。 
+            -a ：全部的文件，连同隐藏文件一起列出来
+            -d ：仅列出目录本身，而不是列出目录内的文件数据
+            -l ：长数据串列出，包含文件的属性与权限等等数据
+        cd： change directory， 切换目录
+        pwd： print work directory， 显示目前的目录
+            -P 或 -LP ：显示出确实的路径，而非使用链接路径
+        mkdir： make directory， 创建一个新的目录
+            -m ：配置文件的权限，不需要看默认权限 (umask) 的脸色
+            -p ：可以递归创建多层目录
+        rmdir： remove directory， 删除一个空的目录
+            -p ：从该目录起，一次删除多级空目录
+        cp： copy file， 复制文件或目录
+            -a	Archive	        归档模式，相当于 -pdr	    文件备份，保持属性
+            -d	No Dereference	不跟随符号链接，复制链接本身	复制符号链接时
+            -f	Force	        强制覆盖目标文件	            文件权限不足时
+            -i	Interactive	    交互模式，覆盖前提示确认	    避免误删文件
+            -l	Link	        创建硬链接，而非复制文件内容	节省磁盘空间
+            -p	Preserve	    保留文件权限、时间戳等属性	    保持文件完整性
+            -r	Recursive	    递归复制目录	            复制目录及其子目录
+            -s	Symbolic Link	创建符号链接	            创建快捷方式
+            -u	Update	        仅更新比源文件旧的目标文件	    增量备份
+        rm： remove， 删除文件或目录
+            -f force 强制覆盖目标文件
+            -i interactive 互动模式，删除前询问
+            -r recurive 递归删除
+        mv： move file， 移动文件与目录，或修改文件与目录的名称
+            -f force 强制覆盖目标文件
+            -i interactive 互动模式，删除前询问
+            -u	Update 仅更新比源文件旧的目标文件
+        man [命令]： 查看各个命令的使用文档，如 man cp。
+    
+    Linux 文件内容查看：
+        cat  由第一行开始显示文件内容
+            -A	Show All	        显示所有特殊字符，相当 -vET   排查隐藏字符或格式错误
+            -b	Number Nonblank	    为非空白行添加行号	        阅读代码或分析文本时使用
+            -E	Show Ends	        在行尾显示 $	            查看空白行或额外换行符
+            -n	Number	            为所有行编号	            需要行号标注的场景
+            -T	Show Tabs	        将 Tab 字符显示为 ^I	    检查缩进和格式化问题
+            -v	Show Nonprinting	显示不可见的特殊字符	        诊断乱码或文件异常
+        tac  从最后一行开始显示
+        nl   显示并输出行号
+            -b a	Body Numbering All	    所有行都编号，包括空白行	需要精确定位所有行的场景
+            -b t	Body Numbering Nonblank	只为非空行编号（默认）	    忽略空白行，更清晰地查看代码或文本
+            -n ln	Number Left	            行号左对齐	            使用在简洁文本或调试日志中
+            -n rn	Number Right	        行号右对齐，不补零	    标准行号输出场景
+            -n rz	Number Right with Zero	行号右对齐，用 0 补齐	需要固定行号宽度的场景
+            -w n	Number Width	        指定行号栏的宽度	    格式化文本输出，保持对齐
+        more 逐页显示，只能向下翻页
+            [space]         代表向下翻一页
+            [Enter]         代表向下翻一行
+            /字串            代表在这个显示的内容当中，向下搜寻『字串』这个关键字
+            :f              立刻显示出档名以及目前显示的行数
+            q               离开这个程
+            b 或 [ctrl]-b    代表往回翻页，不过这动作只对文件有用，对管线无用
+        less 与 more 类似，但支持前后翻页
+            [space]     向下翻动一页；
+            [pagedown]  向下翻动一页；
+            [pageup]    向上翻动一页；
+            /字串        向下搜寻『字串』的功能；
+            ?字串        向上搜寻『字串』的功能；
+            n           重复前一个搜寻 (与 / 或 ? 有关！)
+            N           反向的重复前一个搜寻 (与 / 或 ? 有关！)
+            q           quit，离开这个程序
+        head 查看前 N 行内容
+            -n --lines 后面接行数
+        tail 查看后 N 行内容
+            -n --lines 后面接行数
+            -f --follow 实时监控文件变化，显示新增内容 
+
+    Linux 链接：
+        硬链接（Hard Link） 和 符号链接（Symbolic Link）。 默认情况下，ln 命令产生硬链接。
+        硬连接指通过索引节点来进行连接。 它是文件的多个名字，共享同一份数据。
+        软连接指向的是文件的路径名。 它像快捷方式，指向另一个文件的位置。
+        
+            硬连接	                    软连接
+        指向同一个文件的实际内容	        指向文件的路径
+        相同的 Inode 编号	            不同的 Inode 编号
+        删除原文件不影响硬链接文件	        删除原文件会导致软链接失效
+        不能跨分区创建	                可以跨分区创建
+        保护重要文件，防止误删	        创建快捷方式方便访问
+
+    [oracle@Linux]$ touch f1          #测试文件f1
+    [oracle@Linux]$ ln f1 f2          #f1的硬连接文件f2
+    [oracle@Linux]$ ln -s f1 f3       #f1的符号连接文件f3
+    [oracle@Linux]$ ls -li            # -i参数显示文件的inode节点信息
+    total 0
+    9797648 -rw-r--r--  2 oracle oinstall 0 Apr 21 08:11 f1
+    9797648 -rw-r--r--  2 oracle oinstall 0 Apr 21 08:11 f2
+    9797649 lrwxrwxrwx  1 oracle oinstall 2 Apr 21 08:11 f3 -> f1
+    
