@@ -238,4 +238,119 @@ linux 文件与目录管理：
     9797648 -rw-r--r--  2 oracle oinstall 0 Apr 21 08:11 f1
     9797648 -rw-r--r--  2 oracle oinstall 0 Apr 21 08:11 f2
     9797649 lrwxrwxrwx  1 oracle oinstall 2 Apr 21 08:11 f3 -> f1
+
+linux 用户和用户组管理：
+    Linux系统是一个多用户多任务的分时操作系统，任何一个要使用系统资源的用户，都必须首先向系统管理员申请一个账号，然后以这个账号的身份进入系统。
     
+    Linux系统用户账号的管理：
+        用户账号的添加、删除与修改
+            useradd [选项] 用户名
+                -c comment 描述
+                -d directory 用户主目录，如果此目录不存在，则同时使用 -m 选项，可以创建主目录 （useradd -d /data/user1 user1）
+                -g group 所属用户组 （useradd -g developers user3）
+                -G Additional GROUP 所属附加组 （useradd -G sudo,devops user4）
+                -m make 自动创建用户主目录 （useradd -m user2）
+                -o non-unique 允许使用重复的用户ID
+                -s Shell 登录Shell （useradd -s /bin/bash user5）
+                -u user number，用户 ID，如果同时有 -o 选项，则可以重复使用其他用户的标识号 （useradd -u 1050 user6）
+
+            userdel [选项] 用户名
+                -r remove 把用户的主目录一起删除
+
+            usermod [选项] 用户名
+                -l login 修改用户名
+        用户口令的管理（更新 /etc/passwd）
+            passwd [选项] 用户名
+                -l lock 锁定口令，即禁用账号
+                -u unlock 口令解锁
+                -d delete 使账号无口令
+                -f force 强迫用户下次登录时修改口令
+        用户组的添加、删除与修改（更新 /etc/group）
+            groupadd [选项] 用户组
+                -g GID 指定新用户组的组标识号（GID）
+                -o non-unique 一般与 -g 选项同时使用，表示新用户组的GID可以与系统已有用户组的GID相同
+            groupdel 用户组
+            groupmod [选项] 用户组
+                -g GID 为用户组指定新的组标识号
+                -o non-unique 与 -g 选项同时使用，用户组的新GID可以与系统已有用户组的GID相同。
+                -n new 新用户组 将用户组的名字改为新名字
+            newgrp 用户组 
+                用户要访问属于附加组的文件时，必须先切换到其他用户组
+
+    与用户账号有关的系统文件：
+        /etc/passwd  用户名:口令:用户标识号:组标识号:注释性描述:主目录:登录Shell
+                     用户标识号   0是超级用户root的标识号，1～99由系统保留，作为管理账号，普通用户的标识号从100开始。
+                     主目录      默认在 /home/用户名
+                     登录Shell  Shell是用户与Linux系统之间的接口。 
+                               用户登录后，要启动一个进程，负责将用户的操作传给内核，这个进程是用户登录到系统后运行的命令解释器或某个特定的程序，即Shell。
+                               常用的有sh(Bourne Shell), csh(C Shell), ksh(Korn Shell), tcsh(TENEX/TOPS-20 type C Shell), bash(Bourne Again Shell)等。
+        /etc/shadow  登录名:加密口令:最后一次修改时间:最小时间间隔:最大时间间隔:警告时间:不活动时间:失效时间:标志
+                     使用了shadow技术，把真正的加密后的用户口令字存放到 /etc/shadow 文件中，与 /etc/passwd 数据一一对应，超级用户权限才可以访问
+                     加密口令长度为13个字符。
+        /etc/group   组名:口令:组标识号:组内用户列表
+    
+    伪用户： pseudo users，系统创建的用户账户，主要用于管理系统服务和进程。 
+          存在于 /etc/passwd 文件中，有独立的 UID 和 GID。 
+          不能直接登录系统，因为它们的登录 Shell通常被设置为无效 Shell或空 Shell，如 /usr/sbin/nologin 或 /bin/false。
+          某些系统进程或服务需要特定的用户身份来运行。使用伪用户运行进程，有助于限制权限，防止进程访问不属于它们的资源。
+
+        root	    0	    超级用户，拥有系统最高权限	            /bin/bash
+        daemon	    1	    系统服务守护进程运行账户	            /usr/sbin/nologin
+        bin	        2	    旧版系统中管理二进制可执行文件	        /usr/sbin/nologin
+        sys	        3	    系统级服务和进程使用	                /usr/sbin/nologin
+        nobody	    65534	最小权限用户，通常用于匿名访问	        /usr/sbin/nologin
+        www-data	33	    Web 服务（如 Apache、Nginx）运行账户	/usr/sbin/nologin
+        mail	    8	    邮件服务相关账户	                /usr/sbin/nologin
+        ftp	        40	    FTP 服务账户	                    /usr/sbin/nologin
+        
+    添加批量用户：
+        user001::600:100:user:/home/user001:/bin/bash
+        newusers < user.txt
+        pwunconv
+        user001:123456
+        chpasswd < passwd.txt
+        pwconv
+        
+        按照 /etc/passwd 的格式编辑一个文本文件 user.txt
+        以root身份执行命令 /usr/sbin/newusers，从刚创建的用户文件user.txt中导入数据，创建用户，执行命令 vipw 检查 /etc/passwd 是否新增数据
+        执行命令/usr/sbin/pwunconv。 将 /etc/shadow 产生的 shadow 密码解码，然后回写到 /etc/passwd 中，并将 /etc/shadow 的 shadow 密码栏删掉
+        按照 “用户名:密码“ 的方式编辑每个用户的密码对照文件
+        以 root 身份执行命令 /usr/sbin/chpasswd 创建用户密码写入/etc/passwd
+        执行命令 /usr/sbin/pwconv 将密码编码为 shadow password，并将结果写入 /etc/shadow
+
+linux 磁盘管理：
+    Linux 磁盘管理常用三个命令：
+        df  disk free 列出文件系统整体磁盘空间占用情况
+            df [选项] [目录或文件名]
+                -h	        human-readable	    以人类可读的方式显示磁盘空间，例如 1K, 5M, 2G，方便查看。
+                -T	        print-type	        显示文件系统的类型，如 ext4、xfs、tmpfs 等。
+                -t <类型>	    type=<type>	        仅显示指定类型的文件系统，如：df -t ext4 只显示 ext4 类型的文件系统。
+                -i	        inodes	            显示inode 使用情况。Inode 是文件和目录的元数据索引节点。
+                -H	        si	                使用国际单位制 (SI) 显示磁盘空间，基于 1000 字节为单位（MB、GB 等）。
+                -k	        block-size=1K	    以KB 为单位显示磁盘使用情况，1 KB = 1024 字节。
+                -a	        all	                显示所有的文件系统，包括虚拟文件系统，例如 proc、sysfs 等。
+        du  disk used 检查磁盘空间使用量
+            du [选项] [文件或目录名称]
+                -a	all	            显示所有文件和目录的磁盘占用空间。默认情况下，du 只显示目录的大小，不显示具体文件的大小。
+                -h	human-readable	以人类可读的方式显示磁盘占用空间，例如 1K, 5M, 2G 等。
+                -s	summarize	    仅显示指定文件或目录的总计，不列出子目录的大小。
+                -S	separate-dirs	包括子目录下的总计。
+                -k	block-size=1K	以KB（1024字节）为单位显示磁盘使用情况。
+                -m	block-size=1M	以MB（1024 KB）为单位显示磁盘使用情况。
+        fdisk  用于磁盘分区
+            fdisk [-l] 装置名称
+                -l list 列出检测到的磁盘设备和它们的分区信息
+    
+    磁盘格式化: mkfs   make filesystem
+        mkfs [-t 文件系统格式] 装置文件名
+            -t type 可以接文件系统格式，例如 ext3, ext2, vfat 等
+
+    磁盘检验: fsck  filesystem check 用来检查和维护不一致的文件系统
+        fsck [-t 文件系统] [选项] 装置名称
+    
+    磁盘挂载与卸除: 挂载使用 mount 命令，卸载使用 umount 命令。
+        mount [-t 文件系统] [-L Label名] [-o 额外选项] [-n]  装置文件名  挂载点
+        umount [-fn] 装置文件名或挂载点
+            -f	force	强制卸载文件系统。通常用于网络文件系统 (如 NFS) 无响应或不可访问的情况下。
+            -n	no-mtab	不更新 /etc/mtab 文件。 /etc/mtab 记录当前挂载的文件系统，使用 -n 时不会更新这个记录，适用于特殊情况如维护模式。
+
