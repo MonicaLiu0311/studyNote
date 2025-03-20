@@ -1,38 +1,22 @@
-sudo			提升运行的权限,以系统管理者的身份执行指令（可以理解为假扮root的身份）
-sudo reboot		获取超级管理员权限
-apt-get 		广受欢迎的命令行工具，会自动检测并安装依赖（软件包比较成熟）
-				最常用的 Linux 包管理命令都被分散在了 apt-get、apt-cache 和 apt-config 这三条命令当中
-apt 			为了解决命令过于分散的问题，简单理解就是 apt = apt-get + apt-cache + apt-config 中最常用命令选项的集合。
-
+sudo            提升运行的权限,以系统管理者的身份执行指令（可以理解为假扮root的身份）
+sudo reboot     获取超级管理员权限
+apt-get         广受欢迎的命令行工具，会自动检测并安装依赖（软件包比较成熟）
+                最常用的 Linux 包管理命令都被分散在了 apt-get、apt-cache 和 apt-config 这三条命令当中
+apt             为了解决命令过于分散的问题，简单理解就是 apt = apt-get + apt-cache + apt-config 中最常用命令选项的集合。
 
 apt-get 执行原理：
-    Reading package lists：		这就是从/etc/apt/sources.list中检索可用的源中是否有这个软件包
-    Building dependency tree：	生成软件依赖树，将需要的依赖包提前列出来，在安装所需软件之前进行安装
-
+    Reading package lists： 这就是从/etc/apt/sources.list中检索可用的源中是否有这个软件包
+    Building dependency tree： 生成软件依赖树，将需要的依赖包提前列出来，在安装所需软件之前进行安装
 
 为什么 apt-get 比 vcpkg 更快？
     apt-get 对硬件资源的要求不高。它消耗更少的内存并且运行速度更快。
-
-
-查看磁盘占用 
-    df -h
-
-要查看挂载在 /dev/sda 上的文件系统的权限（/dev/sda       1006G   94G  861G  10% /home/vliumonica）
-    df -T /dev/sda
-    ls -la /home/vliumonica
-
-把 /home/monica 下的所有文件的操作权限都给 monica 
-    sudo chown -R monica /home/monica
-    sudo chmod -R u+rwx /home/monica
-如果是系统文件夹可能会修改权限失败，用下面这个命令
-    sudo chmod 777 /mnt
-
 
 设置一个全局的环境变量，使得无论是 root 用户还是其他用户，都能共享相同的设置
     sudo vim /etc/environment
 
 linux 系统启动过程：
     BIOS （Basic Input/Output System，基本输入输出系统） 开机自检，负责硬件初始化，直到操作系统接管硬件。
+
     内核引导： 电源开机 - Bootloader（/boost）启动 - 加载Linux 内核 - 检查硬件（CPU、内存、磁盘）
             拧动钥匙，汽车的点火系统启动，加载发动机，它会检查基本功能是否正常，比如油压、电池、燃油泵
     运行 init ： init 进程运行（所有进程的起点） - 读取配置文件（旧/etc/inittab 新Systemd） - 启动系统级服务（挂载文件系统、日志服务、网络服务、加载驱动） - 单用户模式/多用户模式/图形界面（7个运行级别：0-6）
@@ -43,15 +27,15 @@ linux 系统启动过程：
             进入待命状态，，车门打开，等待乘客上车
     用户登录系统： 输入用户名和密码 - 登录系统 - 使用 Linux
                坐进车里，插入钥匙，然后踩下油门，正式开始驾驶
-    
-    /etc/systemd/system/default.target	系统的默认启动目标（替代 /etc/inittab）
-    /usr/lib/systemd/system/*.service	存放系统服务（Unit）配置文件
-    /etc/systemd/system/*.service	自定义的 systemd 服务
-    /etc/fstab	挂载文件系统
-    /etc/hostname	存储系统主机名
-    /etc/sysctl.conf	配置内核参数
-    /etc/modules-load.d/	需要加载的内核模块列表
-    
+
+    /etc/systemd/system/default.target    系统的默认启动目标（替代 /etc/inittab）
+    /usr/lib/systemd/system/*.service    存放系统服务（Unit）配置文件
+    /etc/systemd/system/*.service    自定义的 systemd 服务
+    /etc/fstab    挂载文件系统
+    /etc/hostname    存储系统主机名
+    /etc/sysctl.conf    配置内核参数
+    /etc/modules-load.d/    需要加载的内核模块列表
+
 linux 目录结构：
     monica@monica:~$ ls /
     bin  boot  dev  etc  home  lib  lib32  lib64  libx32  lost+found  media  mnt  opt  proc  root  run  sbin  snap  srv  sys  tmp  usr  var
@@ -89,20 +73,19 @@ linux 目录结构：
     账户： /home /root /usr /usr ...
     运行过程中要用： /var /proc
     扩展用的： /opt /srv
-    扩展用的： /opt /srv
 
 linux 远程登录：
     SSH： Secure Shell 的缩写，是一种安全的远程登录协议，用于在不安全的网络（如互联网）上，加密连接到远程服务器，以执行命令或传输文件。
 
-    SSH 的特点:
+    SSH 的特点
         加密通信：防止数据被窃听或篡改
         远程管理：可远程控制 Linux/Unix 服务器
         端口转发：支持安全的端口转发和代理
         
-        /etc/ssh/sshd_config	SSH 服务器配置
-        ~/.ssh/id_rsa	SSH 私钥
-        ~/.ssh/id_rsa.pub	SSH 公钥
-        ~/.ssh/known_hosts	已信任的远程主机列表
+        /etc/ssh/sshd_config    SSH 服务器配置
+        ~/.ssh/id_rsa    SSH 私钥
+        ~/.ssh/id_rsa.pub    SSH 公钥
+        ~/.ssh/known_hosts    已信任的远程主机列表
         
         连接远程服务器（cmd/powershell）： ssh user@remote_host
         复制文件到远程服务器（使用 scp）： scp local_file user@remote_host:/remote/path/
@@ -117,14 +100,14 @@ linux 文件基本属性：
         chown [-R] 所有者:属组名 文件名
 
         chmod [-R] xyz 文件或目录
-        -R : 进行递归(recursive)的持续变更，以及连同次目录下的所有文件都会变更    
         chmod u=rwx,g=rx,o=r 文件名
         chmod  a-x 文件名
         chmod  u+w 文件名
-        u 用户， g 组， o 其他； + 加入， - 除去， = 设定; a 全部。
-        
+
         chgrp [-R] 属组名 文件名
-        -R：递归更改文件属组，就是在更改某个目录文件的属组时，如果加上 -R 的参数，那么该目录下的所有文件的属组都会更改。
+        
+        -R : 进行递归(recursive)的持续变更，以及连同次目录下的所有文件都会变更
+        u 用户， g 组， o 其他； + 加入， - 除去， = 设定; a 全部。        
     
     Linux 文件的基本权限就有九个： 分别是 owner/group/others 三种身份，各有自己的 read/write/execute 权限。
     Linux文件属性有两种设置方法： 数字、符号， r:4， w:2， x:1。
@@ -134,9 +117,9 @@ linux 文件基本属性：
     使用 ll 或者 ls –l 命令来显示一个文件的属性以及文件所属的用户和组： 
         monica@monica003:/mnt$ ls -l
         total 24
-        -r--r--r-- 1 root       root         639 Mar 12 21:27 DATALOSS_WARNING_README.txt
-        drwx------ 2 root       root       16384 Mar 12 21:27 lost+found
-        drwxrwxr-x 2 vliumonica vliumonica  4096 Mar 18 01:58 test
+        -r--r--r-- 1 root       root         639    Mar 12 21:27 DATALOSS_WARNING_README.txt
+        drwx------ 2 root       root         16384  Mar 12 21:27 lost+found
+        drwxrwxr-x 2 vliumonica vliumonica   4096   Mar 18 01:58 test
         
         从左至右用 0-9 这些数字来表示。
         第 0 位确定文件类型： d 目录， - 文件， l 链接文档(link file)， b 装置文件里面的可供储存的接口设备(可随机存取装置)， c 装置文件里面的串行端口设备例如键盘、鼠标(一次性读取装置)。
@@ -161,41 +144,41 @@ linux 文件与目录管理：
         rmdir： remove directory， 删除一个空的目录
             -p ：从该目录起，一次删除多级空目录
         cp： copy file， 复制文件或目录
-            -a	Archive	        归档模式，相当于 -pdr	    文件备份，保持属性
-            -d	No Dereference	不跟随符号链接，复制链接本身	复制符号链接时
-            -f	Force	        强制覆盖目标文件	            文件权限不足时
-            -i	Interactive	    交互模式，覆盖前提示确认	    避免误删文件
-            -l	Link	        创建硬链接，而非复制文件内容	节省磁盘空间
-            -p	Preserve	    保留文件权限、时间戳等属性	    保持文件完整性
-            -r	Recursive	    递归复制目录	            复制目录及其子目录
-            -s	Symbolic Link	创建符号链接	            创建快捷方式
-            -u	Update	        仅更新比源文件旧的目标文件	    增量备份
+            -a    Archive            归档模式，相当于 -pdr           文件备份，保持属性
+            -d    No Dereference     不跟随符号链接，复制链接本身       复制符号链接时
+            -f    Force              强制覆盖目标文件                文件权限不足时
+            -i    Interactive        交互模式，覆盖前提示确认          避免误删文件
+            -l    Link               创建硬链接，而非复制文件内容       节省磁盘空间
+            -p    Preserve           保留文件权限、时间戳等属性         保持文件完整性
+            -r    Recursive          递归复制目录                   复制目录及其子目录
+            -s    Symbolic Link      创建符号链接                   创建快捷方式
+            -u    Update             仅更新比源文件旧的目标文件         增量备份
         rm： remove， 删除文件或目录
-            -f force 强制覆盖目标文件
-            -i interactive 互动模式，删除前询问
-            -r recurive 递归删除
+            -f    force         强制覆盖目标文件
+            -i    interactive   互动模式，删除前询问
+            -r    recurive      递归删除
         mv： move file， 移动文件与目录，或修改文件与目录的名称
-            -f force 强制覆盖目标文件
-            -i interactive 互动模式，删除前询问
-            -u	Update 仅更新比源文件旧的目标文件
+            -f    force         强制覆盖目标文件
+            -i    interactive   互动模式，删除前询问
+            -u    update        仅更新比源文件旧的目标文件
         man [命令]： 查看各个命令的使用文档，如 man cp。
     
     Linux 文件内容查看：
         cat  由第一行开始显示文件内容
-            -A	Show All	        显示所有特殊字符，相当 -vET   排查隐藏字符或格式错误
-            -b	Number Nonblank	    为非空白行添加行号	        阅读代码或分析文本时使用
-            -E	Show Ends	        在行尾显示 $	            查看空白行或额外换行符
-            -n	Number	            为所有行编号	            需要行号标注的场景
-            -T	Show Tabs	        将 Tab 字符显示为 ^I	    检查缩进和格式化问题
-            -v	Show Nonprinting	显示不可见的特殊字符	        诊断乱码或文件异常
+            -A    Show All              显示所有特殊字符，相当 -vET    排查隐藏字符或格式错误
+            -b    Number Nonblank       为非空白行添加行号            阅读代码或分析文本时使用
+            -E    Show Ends             在行尾显示 $                查看空白行或额外换行符
+            -n    Number                为所有行编号                 需要行号标注的场景
+            -T    Show Tabs             将 Tab 字符显示为 ^I         检查缩进和格式化问题
+            -v    Show Nonprinting      显示不可见的特殊字符           诊断乱码或文件异常
         tac  从最后一行开始显示
         nl   显示并输出行号
-            -b a	Body Numbering All	    所有行都编号，包括空白行	需要精确定位所有行的场景
-            -b t	Body Numbering Nonblank	只为非空行编号（默认）	    忽略空白行，更清晰地查看代码或文本
-            -n ln	Number Left	            行号左对齐	            使用在简洁文本或调试日志中
-            -n rn	Number Right	        行号右对齐，不补零	    标准行号输出场景
-            -n rz	Number Right with Zero	行号右对齐，用 0 补齐	需要固定行号宽度的场景
-            -w n	Number Width	        指定行号栏的宽度	    格式化文本输出，保持对齐
+            -b a    Body Numbering All          所有行都编号，包括空白行      需要精确定位所有行的场景
+            -b t    Body Numbering Nonblank     只为非空行编号（默认）        忽略空白行，更清晰地查看代码或文本
+            -n ln    Number Left                行号左对齐                使用在简洁文本或调试日志中
+            -n rn    Number Right               行号右对齐，不补零          标准行号输出场景
+            -n rz    Number Right with Zero     行号右对齐，用 0 补齐       需要固定行号宽度的场景
+            -w n    Number Width                指定行号栏的宽度           格式化文本输出，保持对齐
         more 逐页显示，只能向下翻页
             [space]         代表向下翻一页
             [Enter]         代表向下翻一行
@@ -204,11 +187,11 @@ linux 文件与目录管理：
             q               离开这个程
             b 或 [ctrl]-b    代表往回翻页，不过这动作只对文件有用，对管线无用
         less 与 more 类似，但支持前后翻页
-            [space]     向下翻动一页；
-            [pagedown]  向下翻动一页；
-            [pageup]    向上翻动一页；
-            /字串        向下搜寻『字串』的功能；
-            ?字串        向上搜寻『字串』的功能；
+            [space]     向下翻动一页
+            [pagedown]  向下翻动一页
+            [pageup]    向上翻动一页
+            /字串        向下搜寻『字串』的功能
+            ?字串        向上搜寻『字串』的功能
             n           重复前一个搜寻 (与 / 或 ? 有关！)
             N           反向的重复前一个搜寻 (与 / 或 ? 有关！)
             q           quit，离开这个程序
@@ -223,12 +206,12 @@ linux 文件与目录管理：
         硬连接指通过索引节点来进行连接。 它是文件的多个名字，共享同一份数据。
         软连接指向的是文件的路径名。 它像快捷方式，指向另一个文件的位置。
         
-            硬连接	                    软连接
-        指向同一个文件的实际内容	        指向文件的路径
-        相同的 Inode 编号	            不同的 Inode 编号
-        删除原文件不影响硬链接文件	        删除原文件会导致软链接失效
-        不能跨分区创建	                可以跨分区创建
-        保护重要文件，防止误删	        创建快捷方式方便访问
+            硬连接                        软连接
+        指向同一个文件的实际内容            指向文件的路径
+        相同的 Inode 编号                不同的 Inode 编号
+        删除原文件不影响硬链接文件            删除原文件会导致软链接失效
+        不能跨分区创建                    可以跨分区创建
+        保护重要文件，防止误删            创建快捷方式方便访问
 
     [oracle@Linux]$ touch f1          #测试文件f1
     [oracle@Linux]$ ln f1 f2          #f1的硬连接文件f2
@@ -294,14 +277,14 @@ linux 用户和用户组管理：
           不能直接登录系统，因为它们的登录 Shell通常被设置为无效 Shell或空 Shell，如 /usr/sbin/nologin 或 /bin/false。
           某些系统进程或服务需要特定的用户身份来运行。使用伪用户运行进程，有助于限制权限，防止进程访问不属于它们的资源。
 
-        root	    0	    超级用户，拥有系统最高权限	            /bin/bash
-        daemon	    1	    系统服务守护进程运行账户	            /usr/sbin/nologin
-        bin	        2	    旧版系统中管理二进制可执行文件	        /usr/sbin/nologin
-        sys	        3	    系统级服务和进程使用	                /usr/sbin/nologin
-        nobody	    65534	最小权限用户，通常用于匿名访问	        /usr/sbin/nologin
-        www-data	33	    Web 服务（如 Apache、Nginx）运行账户	/usr/sbin/nologin
-        mail	    8	    邮件服务相关账户	                /usr/sbin/nologin
-        ftp	        40	    FTP 服务账户	                    /usr/sbin/nologin
+        root        0        超级用户，拥有系统最高权限                /bin/bash
+        daemon        1        系统服务守护进程运行账户                /usr/sbin/nologin
+        bin            2        旧版系统中管理二进制可执行文件            /usr/sbin/nologin
+        sys            3        系统级服务和进程使用                    /usr/sbin/nologin
+        nobody        65534    最小权限用户，通常用于匿名访问            /usr/sbin/nologin
+        www-data    33        Web 服务（如 Apache、Nginx）运行账户    /usr/sbin/nologin
+        mail        8        邮件服务相关账户                    /usr/sbin/nologin
+        ftp            40        FTP 服务账户                        /usr/sbin/nologin
         
     添加批量用户：
         user001::600:100:user:/home/user001:/bin/bash
@@ -322,21 +305,21 @@ linux 磁盘管理：
     Linux 磁盘管理常用三个命令：
         df  disk free 列出文件系统整体磁盘空间占用情况
             df [选项] [目录或文件名]
-                -h	        human-readable	    以人类可读的方式显示磁盘空间，例如 1K, 5M, 2G，方便查看。
-                -T	        print-type	        显示文件系统的类型，如 ext4、xfs、tmpfs 等。
-                -t <类型>	    type=<type>	        仅显示指定类型的文件系统，如：df -t ext4 只显示 ext4 类型的文件系统。
-                -i	        inodes	            显示inode 使用情况。Inode 是文件和目录的元数据索引节点。
-                -H	        si	                使用国际单位制 (SI) 显示磁盘空间，基于 1000 字节为单位（MB、GB 等）。
-                -k	        block-size=1K	    以KB 为单位显示磁盘使用情况，1 KB = 1024 字节。
-                -a	        all	                显示所有的文件系统，包括虚拟文件系统，例如 proc、sysfs 等。
+                -h            human-readable        以人类可读的方式显示磁盘空间，例如 1K, 5M, 2G，方便查看。
+                -T            print-type            显示文件系统的类型，如 ext4、xfs、tmpfs 等。
+                -t <类型>        type=<type>            仅显示指定类型的文件系统，如：df -t ext4 只显示 ext4 类型的文件系统。
+                -i            inodes                显示inode 使用情况。Inode 是文件和目录的元数据索引节点。
+                -H            si                    使用国际单位制 (SI) 显示磁盘空间，基于 1000 字节为单位（MB、GB 等）。
+                -k            block-size=1K        以KB 为单位显示磁盘使用情况，1 KB = 1024 字节。
+                -a            all                    显示所有的文件系统，包括虚拟文件系统，例如 proc、sysfs 等。
         du  disk used 检查磁盘空间使用量
             du [选项] [文件或目录名称]
-                -a	all	            显示所有文件和目录的磁盘占用空间。默认情况下，du 只显示目录的大小，不显示具体文件的大小。
-                -h	human-readable	以人类可读的方式显示磁盘占用空间，例如 1K, 5M, 2G 等。
-                -s	summarize	    仅显示指定文件或目录的总计，不列出子目录的大小。
-                -S	separate-dirs	包括子目录下的总计。
-                -k	block-size=1K	以KB（1024字节）为单位显示磁盘使用情况。
-                -m	block-size=1M	以MB（1024 KB）为单位显示磁盘使用情况。
+                -a    all                显示所有文件和目录的磁盘占用空间。默认情况下，du 只显示目录的大小，不显示具体文件的大小。
+                -h    human-readable    以人类可读的方式显示磁盘占用空间，例如 1K, 5M, 2G 等。
+                -s    summarize        仅显示指定文件或目录的总计，不列出子目录的大小。
+                -S    separate-dirs    包括子目录下的总计。
+                -k    block-size=1K    以KB（1024字节）为单位显示磁盘使用情况。
+                -m    block-size=1M    以MB（1024 KB）为单位显示磁盘使用情况。
         fdisk  用于磁盘分区
             fdisk [-l] 装置名称
                 -l list 列出检测到的磁盘设备和它们的分区信息
@@ -351,6 +334,131 @@ linux 磁盘管理：
     磁盘挂载与卸除: 挂载使用 mount 命令，卸载使用 umount 命令。
         mount [-t 文件系统] [-L Label名] [-o 额外选项] [-n]  装置文件名  挂载点
         umount [-fn] 装置文件名或挂载点
-            -f	force	强制卸载文件系统。通常用于网络文件系统 (如 NFS) 无响应或不可访问的情况下。
-            -n	no-mtab	不更新 /etc/mtab 文件。 /etc/mtab 记录当前挂载的文件系统，使用 -n 时不会更新这个记录，适用于特殊情况如维护模式。
+            -f    force    强制卸载文件系统。通常用于网络文件系统 (如 NFS) 无响应或不可访问的情况下。
+            -n    no-mtab    不更新 /etc/mtab 文件。 /etc/mtab 记录当前挂载的文件系统，使用 -n 时不会更新这个记录，适用于特殊情况如维护模式。
+
+linux vi/vim：
+    基本上 vi/vim 共分为三种模式，命令模式（Command Mode）、输入模式（Insert Mode）和命令行模式（Command-Line Mode）。
+
+    命令模式:
+        i         insert                 输入模式，在光标当前位置开始输入文本
+        I         Insert                 输入模式，在光标行的第一个非空格字符处开始输入文本
+        x         类似Delete键             删除当前光标所在处的字符（向后删除多个用 5x）
+        X         类似Backspace键          删除当前光标所在处的字符（向前删除多个用 5X）
+        :         Command Mode           底线命令模式，在最底一行输入命令
+        a         append                 追加模式，在光标下一个位置开始输入文本
+        A         Append                 追加模式，在光标行的最后一个非空格字符处开始输入文本
+        o         open                   打开新行，在当前行的下方插入一个新行，并进入插入模式
+        O         Open                   打开新行，在当前行的上方插入一个新行，并进入插入模式
+        r         replace                取代模式，取代光标所在字符一次
+        R         Replace                取代模式，取代光标所在字符多次，直到按下 Esc 键
+        dd        delete-delete          剪切当前行（向下剪切多行用 5dd）
+        yy        copy-copy              复制当前行（向下剪切多行用 5yy）
+        p（小写）    paste                  粘贴剪贴板内容到光标下方
+        P（大写）    Paste                  粘贴剪贴板内容到光标上方
+        u         undo                   撤销上一次操作
+        Ctrl + r  redo                   重做上一次撤销的操作
+        Ctrl + v  Visual Block           块选择模式，移动光标连续选择要操作的行
+        :w        write                  保存文件
+        ：w!       write                  强制保存文件
+        :q        quit                   退出 Vim 编辑器
+        :q!       quit without saving    强制退出 Vim 编辑器，不保存修改
+        \rr       run                    运行程序
+        \rc       run and compile        保存并编译程序（会生成二进制文件）
+
+    
+    输入模式：
+        Enter               确认输入或换行
+        Back Space          删除光标前的字符
+        Del                 删除光标后的字符
+        方向键               在文本中移动光标（移动多行用 5 + 方向键）
+        Home/End(0/$)       跳转到行首或行尾
+        Page Up/Page Down   翻页操作
+        Insert              切换插入和替换模式
+        Esc                 退出输入模式，切换到命令模式
+
+    底线命令模式：
+        :set nu         set number             显示行号
+        :set nonu       set nonumber           取消行号
+        :w              write                  保存文件
+        ：w!             write                  强制保存文件
+        :q              quit                   退出 Vim 编辑器
+        :q!(ZQ)         quit without saving    强制退出 Vim 编辑器，不保存修改
+        :wq(ZZ)         write quit             保存文件并退出 Vim 编辑器
+        :w [filename]   write filename         将编辑的数据储存成另一个文件
+        :r [filename]   read filename          读入另一个文件的数据加到游标所在行的后面
+        :n1,n2 w [filename]                    将 n1 到 n2 的内容储存到另一个文件
+
+
+    光标移动：
+        gg              移动到这个档案的第一行，相当于 1G
+        G               移动到这个档案的最后一行(常用)
+        nG              移动到这个档案的第 n 行
+        n<Enter>        光标向下移动 n 行
+        n<space>        光标会向右移动这一行的 n 个字符
+        +               光标移动到非空格符的下一行
+        -               光标移动到非空格符的上一行
+        Home/End(0/$)   光标跳转到行首或行尾
+
+    搜索替换：
+        /word           向光标之下寻找一个名为 word 的字符串
+        ?word           向光标之上寻找一个名为 word 的字符串
+        n               next 代表重复前一个搜寻的动作，向下继续搜寻下一个名为 word 的字符串
+        N               Next 向上继续搜寻下一个名为 word 的字符串
+
+    删除、复制与粘贴：
+        d1G       删除光标所在到第一行的所有数据
+        dG        删除光标所在到最后一行的所有数据
+        d$        删除游标所在处到该行的最后一个字符
+        d0        删除游标所在处到该行的最前面一个字符
+        y1G       复制游标所在行到第一行的所有数据
+        yG        复制游标所在行到最后一行的所有数据
+        y0        复制光标所在的那个字符到该行行首的所有数据
+        y$        复制光标所在的那个字符到该行行尾的所有数据
+
+linux yum 命令：
+    yum 是一个在 Fedora 和 RedHat 以及 SUSE 中的 Shell 前端软件包管理器。 
+    基于 RPM 包管理，能够从指定的服务器自动下载 RPM 包并且安装，可以自动处理依赖性关系，并且一次安装所有依赖的软件包，无须繁琐地一次次下载、安装。
+    yum 提供了查找、安装、删除某一个、一组甚至全部软件包的命令，而且命令简洁而又好记。
+    
+    yum 语法： yum [options] [command] [package ...]
+
+    yum常用命令： 
+        yum check-update                    列出所有可更新的软件清单
+        yum list                            列出所有可安裝的软件清单
+        yum update                          更新所有软件
+        yum update <package_name>           仅更新指定的软件
+        yum install <package_name>          仅安装指定的软件
+        yum remove <package_name>           删除软件包
+        yum search <keyword>                查找软件包
+        yum clean packages                  清除缓存目录下的软件包
+        yum clean headers                   清除缓存目录下的 headers
+        yum clean oldheaders                清除缓存目录下旧的 headers
+        yum clean, yum clean all            清除缓存目录下的软件包及旧的 headers (= yum clean packages; yum clean oldheaders) 
+
+    对于 Linux 软件安装时提示缺失库的，可以使用 yum 的 provides 参数查看 libstdc++.so.6 的库文件包含在那个安装包中只需要执行如下查询，然后按查询到安装包包名，使用 yum install 安装即可。
+        yum provides libstdc++.so.6
+
+linux apt 命令：
+    apt 是一个在 Debian 和 Ubuntu 中的 Shell 前端软件包管理器。
+    apt 命令提供了查找、安装、升级、删除某一个、一组甚至全部软件包的命令，而且命令简洁而又好记。
+    apt 命令执行需要超级管理员权限(root)。
+
+    apt 语法： apt [options] [command] [package ...]
+
+    apt 常用命令：
+        sudo apt update                     列出所有可更新的软件清单
+        sudo apt upgrade                    升级所有已安装的软件包到最新版本
+        apt list --upgradable               显示可更新的软件包及其版本信息
+        apt list --installed                列出所有已安装的软件包
+        apt list --all-versions             显示所有已安装的软件包及其版本信息
+        sudo apt full-upgrade               升级所有软件包，同时删除不再需要的软件包
+        sudo apt install <package_name>     安装指定的软件包
+        sudo apt install <pkg1> <pkg2>      同时安装多个软件包
+        sudo apt update <package_name>      更新指定的软件包
+        sudo apt show <package_name>        查看软件包的详细信息，包括版本、大小和依赖关系等
+        sudo apt search <keyword>           根据关键字搜索相关的软件包
+        sudo apt remove <package_name>      删除指定的软件包，但保留配置文件
+        sudo apt purge <package_name>       删除指定的软件包和相关的配置文件
+        sudo apt autoremove                 清理不再使用的依赖和库文件
 
