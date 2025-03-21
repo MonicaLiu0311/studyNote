@@ -1,0 +1,330 @@
+shell 是用户与操作系统内核交互的桥梁，提供命令行界面。 
+shell是一个用 C 语言编写的程序，既是一种命令语言，又是一种程序设计语言。
+Ken Thompson 的 sh 是第一种 Unix Shell，Windows Explorer 是一个典型的图形界面 Shell。
+
+linux 的 Shell 种类众多，常见的有：
+    Bourne Shell （/usr/bin/sh 或 /bin/sh）
+    Bourne Again Shell （/bin/bash，易用、免费，是大多数linux默认的shell）
+    C Shell （/usr/bin/csh）
+    K Shell （/usr/bin/ksh）
+    Shell for Root （/sbin/sh）
+    
+    在一般情况下，人们并不区分 Bourne Shell 和 Bourne Again Shell，所以，像 #!/bin/sh，它同样也可以改为 #!/bin/bash。
+    #! 告诉系统其后路径所指定的程序即是解释此脚本文件的 Shell 程序。
+
+Shell 编程：
+    跟 JavaScript、php 编程一样，只要有一个能编写代码的文本编辑器和一个能解释执行的脚本解释器就可以了。
+    所以脚本其实就是短小的、用来让计算机自动化完成一系列工作的程序，这类程序可以用文本编辑器修改，不需要编译，通常是解释运行的。
+    运行 Shell 脚本有两种方法： 作为可执行程序 或者 作为解释器参数。
+    
+Shell 变量: 用于存储数据值的名称。
+    变量名的命名规则：
+        只包含字母（大小写敏感）、数字和下划线
+        不能以数字开头
+        避免使用 Shell 关键字
+        使用大写字母表示常量（如 PI=3.14）
+        避免使用特殊符号
+        避免使用空格（等号两侧也不行）
+
+    使用变量 ${myUrl}
+    只读变量 readonly myUrl （值不能被改变）
+    删除变量 unset myUrl （不能删除只读变量）
+    
+    变量类型：
+        字符串变量： 可以使用单引号 ' 或双引号 " 来定义字符串
+            获取字符串长度：  echo ${#string}  或者   expr length "$string"
+            提取子字符串：  echo ${string:1:4}
+            查找子字符串：  echo $(expr index "$string" mi) （查找 i 或者 o，那个先出现就找哪个,注意： 返回的索引值从 1 开始）
+            替换字符串： string="text, dummy, text, dummy" 
+                     进行首个 pattern 的替换 echo ${string/text/1} 变成 string="1, dummy, text, dummy"
+                     进行全部 pattern 的替换 echo ${string/text/1} 变成 string="1, dummy, 1, dummy"
+            截取字符串: echo ${var#*aa}  “1234aa678a.com” 变成 “678a.com”
+                     echo ${var##*a}  “1234aa678a.com” 变成 “.com”
+                     echo ${var%aa*}  “1234aa678a.com” 变成 “1234”
+                     echo ${var%a*}  “1234aa678a.com” 变成 “1234”
+            * 通配符，表示匹配任意字符。
+            aa 指定匹配的目标字符串
+            #、## 表示从左边匹配并删除。 # 表示从左边开始删除最短匹配； ## 表示从左边开始删除最长匹配。
+            %、%% 表示从右边匹配并删除。 % 表示从右边开始删除最短匹配； %% 表示从右边开始删除最长匹配。
+        整数变量： 可以使用 declare 或 typeset 命令来声明整数变量
+            数组名=(值1 值2 ... 值n)
+            读取数组元素值：  ${array[n]}
+            读取所有数组元素：  ${array_name[@]} 或者 ${array_name[*]}
+            读取所有数组的键：  ${!array_name[@]} 或者 ${!array_name[*]}
+            获取数组元素的长度：  ${#array_name[n]}
+            获取所有数组元素的长度：  ${#array_name[@]} 或者 ${#array_name[*]}
+        数组变量：  数组可以是整数索引数组或关联数组，关联数组是以 键-值 对的形式存储数据
+        环境变量：  由操作系统或用户设置的特殊变量，用于配置 Shell 的行为和影响其执行环境
+        特殊变量：  
+            $#    传递到脚本的参数个数
+            $*    以一个字符串显示所有参数
+            $$    当前脚本的进程ID
+            $!    后台运行的最后一个进程的 ID
+            $@    将所有参数分别传递，保留参数间的独立性    
+            $-    显示当前 Shell 的选项标志
+            $?    显示上一条命令的退出状态
+    
+Shell 注释：
+    单行注释： 行首加 #
+    多行注释： 用 {} 括起来。 或者使用 :<<EOF 内容 EOF 括起来， EOF 可以自己编辑，比如 :<<COMMENT 内容 COMMENT
+
+Shell 传递脚本参数：
+    脚本内获取参数的格式为 $n， 从 1 开始计数， 因为 $0 表示脚本的名称。
+
+Shell 中括号条件测试: 可以用 test 代替中括号。 -a 表示 and， -o 表示 or。
+    算术比较: 比如一个变量是否为0, [ $var -eq 0 ]。
+        -eq    等于 
+        -ne    不等于
+        -gt    大于
+        -lt    小于
+        -ge    大于或等于
+        -le    小于或等于
+    文件属性测试: 比如一个文件是否存在 [ -e $var ]; 是否是目录 [ -d $var ]。
+        -f    File          判断是否是一个普通文件或文件路径
+        -x    Executable    判断一个文件是否可以作为程序执行
+        -d    Directory     判断是否是一个目录
+        -e    Exists        判断文件或目录是否存在
+        -c    Character     判断是否是一个字符设备文件（如终端、键盘等）
+        -b    Block         判断是否是一个块设备文件（如硬盘、U盘等）
+        -w    Writable      判断文件是否具有写权限
+        -r    Readable      判断文件是否具有读权限
+        -L    Link          判断是否是一个符号链接
+        -s    Size          判断文件是否非空（大小是否大于 0）
+        -g    Group         检测文件是否设置了 SGID 位 （设置了 SGID 位时，进程会以该文件的组权限运行，而不是以当前用户的组权限运行，适用于共享目录中需要不同用户协作的场景）
+        -k    Sticky        检测文件是否设置了粘着位 （只有文件的所有者或 root 用户才能删除该文件，通常用于公共临时目录，避免恶意删除）
+        -p    Pipe          检测文件是否是有名管道 （在两个进程之间进行数据传输，提供一种临时的、单向或双向的通信方式，常用于需要实时传输数据的场景）
+        -u    User          检测文件是否设置了 SUID 位 （设置了 SUID 位时，程序会以该文件的所有者身份运行，而不是以执行者的身份运行，常用于需要临时获取更高权限执行的程序）
+    字符串比较: 比如两个字符串是否相同 [[ $var1 = $var2 ]] 或者 [[ $var1 == $var2 ]]，效果一样。
+        =     Equal         判断字符串是否相等
+        !=    Not Equal     判断字符串是否不相等
+        -z    Zero          判断字符串长度是否为0
+        -n    Non-zero      判断字符串长度是否不为0
+        $                    检测字符串是否不为空
+
+Shell 数组：
+    Bash Shell 只支持一维数组（不支持多维数组），初始化时不需要定义数组大小（与 PHP 类似）。
+    关联数组： declare -A array_name
+            -A Associate 声明一个关联数组，关联数组的键是唯一的。
+            例如：
+                declare -A site=(["google"]="www.google.com" ["runoob"]="www.runoob.com")
+                
+                declare -A site
+                site["google"]="www.google.com"
+                site["runoob"]="www.runoob.com"
+    字符串转数组：
+        空格分割        简单的空格分隔字符串       适用于常规情况
+        IFS 分隔符     使用自定义分隔符的字符串    推荐用于多种分隔符场景
+        替换+转换       需要处理空格或清理数据     高效处理脏数据
+        mapfile       处理多行数据或文件内容     文件读取更简洁
+        awk/sed       复杂的分隔逻辑或文本处理    数据处理能力更强
+
+        words="apple banana cherry"
+        array=($words) 
+        使用 () 将字符串直接转换为数组
+        
+        words="apple,banana,cherry"
+        IFS=',' read -ra array <<< "$words"
+        使用 read 命令将字符串分割并存入数组， IFS Internal Field Separator 设定分隔符为， -r raw 确保 \ 不会被当作转义字符， -a array 表示将结果存入数组。
+        
+        words="  apple   banana cherry   "
+        array=($(echo $words | tr -s ' '))
+        去掉多余空格再转换， tr translate 用于替换或删除字符， -s squeeze 表示将连续重复的相同字符压缩为一个字符。
+        
+        words=$'apple\nbanana\ncherry'
+        mapfile -t array <<< "$words"
+        mapfile 是内置命令，用于从标准输入 (stdin) 读取数据，并将每一行作为数组的一个元素存入数组中。 -t Trim 去除每行末尾的换行符。
+        
+        words="apple|banana|cherry"
+        array=($(echo "$words" | awk -F "|" '{for (i=1; i<=NF; i++) print $i}'))
+        使用 awk 处理文本， -F "|"：设置分隔符为 |， NF Number of Fields 字段数， for (i=1; i<=NF; i++) print $i 遍历所有字段并打印。
+
+Shell 基本运算符：
+    表达式和运算符之间要有空格。
+    完整的表达式要被 ` ` 包含，注意不是单引号。 推荐用 $() 代替 ``。
+    条件表达式要放在方括号之间。
+    
+    算数运算符
+        +    加法             `expr $a + $b`
+        -    减法             `expr $a - $b`
+        *    乘法             `expr $a \* $b` （ * 前边必须加反斜杠）
+        /    除法             `expr $b / $a`
+        %    取余             `expr $b % $a`
+        =    赋值              a=$b
+        ==   相等，比较数字      [ $a == $b ]
+        !=   不相等，比较数字     [ $a != $b ]
+    关系运算符
+        只支持数字，不支持字符串，除非字符串的值是数字。
+        -eq    等于 
+        -ne    不等于
+        -gt    大于
+        -lt    小于
+        -ge    大于或等于
+        -le    小于或等于
+    布尔运算符
+        !    非运算
+        -o    或运算
+        -a    与运算
+    字符串运算符
+        &&    逻辑 AND
+        ||    逻辑 OR
+    字符串运算符
+        =     Equal         判断字符串是否相等       [ $a = $b ]
+        !=    Not Equal     判断字符串是否不相等      [ $a != $b ]
+        -z    Zero          判断字符串长度是否为0     [ -z $a ]
+        -n    Non-zero      判断字符串长度是否不为0    [ -n "$a" ] 
+        $                   检测字符串是否不为空      [ $a ] 
+    文件测试运算符
+        -f    File          判断是否是一个普通文件或文件路径
+        -x    Executable    判断一个文件是否可以作为程序执行
+        -d    Directory     判断是否是一个目录
+        -e    Exists        判断文件或目录是否存在
+        -c    Character     判断是否是一个字符设备文件（如终端、键盘等）
+        -b    Block         判断是否是一个块设备文件（如硬盘、U盘等）
+        -w    Writable      判断文件是否具有写权限
+        -r    Readable      判断文件是否具有读权限
+        -L    Link          判断是否是一个符号链接
+        -s    Size          判断文件是否非空（大小是否大于 0）
+        -g    Group         检测文件是否设置了 SGID 位 （设置了 SGID 位时，进程会以该文件的组权限运行，而不是以当前用户的组权限运行，适用于共享目录中需要不同用户协作的场景）
+        -k    Sticky        检测文件是否设置了粘着位 （只有文件的所有者或 root 用户才能删除该文件，通常用于公共临时目录，避免恶意删除）
+        -p    Pipe          检测文件是否是有名管道 （在两个进程之间进行数据传输，提供一种临时的、单向或双向的通信方式，常用于需要实时传输数据的场景）
+        -u    User          检测文件是否设置了 SUID 位 （设置了 SUID 位时，程序会以该文件的所有者身份运行，而不是以执行者的身份运行，常用于需要临时获取更高权限执行的程序）
+    自增和自减操作符
+        使用 let 命令对整数进行算术运算，不需要加上$    let num++
+        使用 $(( )) 进行算术运算        num=$((num + 1))
+        使用 (( )) 进行算术运算         ((num++))
+        使用 expr 命令可以用于算术运算，但在现代脚本中不如 let 和 $(( )) 常用    num=$(expr $num + 1)
+
+Shell echo 命令
+    显示普通字符串 （双引号完全可以省略）
+    显示转义字符 （双引号也可以省略）
+    显示变量
+    显示换行   echo -e "OK! \n"
+    显示不换行   echo -e "OK! \c"
+    显示结果定向至文件   echo "It is a test" > myfile
+    原样输出字符串，不进行转义或取变量(用单引号)    echo '$name\"'
+    显示命令执行结果 （使用的是反引号 `）    echo `date`
+    
+    -e 表示对输出的内容进行转义。
+    
+    单引号    不能引用变量    不能引用转移符    不能引用引用文本格式符(如：换行符、制表符)
+    双引号    能引用变量      能引用转移符     能引用引用文本格式符(如：换行符、制表符)
+    无引号    能引用变量      能引用转移符     不能引用引用文本格式符(如：换行符、制表符)
+    
+    read 获取键盘输入信息：
+        read 命令一个一个词组地接收输入的参数，每个词组需要使用空格进行分隔； 如果输入的词组个数大于需要的参数个数，则多出的词组将被作为整体为最后一个参数接收。 
+        read 的所有选项必须放在变量前面。 read -s -n 2 -t 5 -p "please input val: " num
+        read [-options] [variable...]
+            -p    prompt    输入提示文字                          read -p "请输入姓名: " name
+            -n    number    限制输入的字符数，达到限制后自动结束输入      read -n 6 name
+            -t    timeout   设置输入超时时间，超时后自动结束            read -t 5 -p "请输入内容: " input
+            -s    silent    隐藏输入的内容（如密码输入）                read -s -p "请输入密码: " password
+
+    >       重定向标准输出，覆盖目标文件           echo "Hello" > output.txt          将 "Hello" 写入 output.txt，覆盖原有内容。
+    >>      重定向标准输出，追加到目标文件末尾       echo "World" >> output.txt         将 "World" 追加到 output.txt 的末尾，不覆盖原有内容。
+    <       重定向标准输入，从文件读取数据          wc -l < file.txt                   使用 file.txt 的内容作为 wc -l 的输入，统计行数。
+    2>      重定向标准错误输出，覆盖目标文件        ls non_exist_file 2> error.log      将错误信息写入 error.log，覆盖原有内容。
+    2>>     重定向标准错误输出，追加到目标文件末尾    ls non_exist_file 2>> error.log    将错误信息追加到 error.log 的末尾。
+    &>      同时重定向标准输出和标准错误到同一文件    ./script.sh &> output.log          将执行 script.sh 的标准输出和错误输出都写入 output.log。
+    2>&1    将错误输出重定向到标准输出             command > output.log 2>&1          将 command 的输出和错误信息都写入 output.log。
+    
+    wc Word Count 它可以统计行数、单词数、字符数等， -l Lines 专门用来统计文件的行数。
+    2 代表 标准错误输出 (stderr)。
+    1 代表 标准输出 (stdout)。
+
+Shell printf 命令：
+    printf  format-string  [arguments...]
+        format-string: 一个格式字符串，它包含普通文本和格式说明符。
+        arguments: 用于填充格式说明符的参数列表。
+        
+    常用的格式说明符包括：
+        %s  String （字符串）
+        %d  Decimal （十进制整数）
+        %f  Float （浮点数，默认支持6位小数）
+        %c  Character （字符）
+        %x  Hexadecimal （十六进制数）
+        %o  Octal （八进制数）
+        %b  Binary （二进制数）
+        %e  Exponential （科学计数法表示的浮点数）
+
+        printf "%-10s %-8s %-4.2f\n" 杨过 男 48.6543
+        %-10s 指一个宽度为 10 个字符，任何字符都会被显示在 10 个字符宽的字符内，如果不足则自动以空格填充，超过也会将内容全部显示出来。
+        - 表示左对齐，没有则表示右对齐。
+        %-4.2f 指格式化为小数，最小宽度为 4 个字符，包括小数点和小数部分。 其中 .2 指保留 2 位小数。
+
+Shell 流程控制：
+    if else 的 [...] 判断语句中大于使用 -gt，小于使用 -lt。
+    如果使用 ((...)) 作为判断语句，大于和小于可以直接使用 > 和 <。
+    if else 语句经常与 test 命令结合使用。
+
+    无限循环： 
+        while :
+        while true
+        for (( ; ; ))
+
+    seq 命令来实现递增：
+        max=5
+        for index in `seq $max`
+        do
+          echo $index
+        done
+
+    case ... esac 为多选择语句，与其他语言中的 switch ... case 语句类似：
+        case 值 in
+        模式1)
+            command1
+            ...
+            ;;
+        模式2)
+            command1
+            ...
+            ;;
+        *)
+            command1
+            ...
+            ;;
+        esac
+        
+        每个 case 分支用右圆括号开始， 两个分号 ;; 表示 break， 如果无一匹配使用星号 * 捕获该值。
+    
+    跳出循环： 
+        break： 跳出所有循环
+        continue： 跳出当前循环
+        
+Shell 输入/输出重定向:
+    大多数 UNIX系统命令从你的终端接受输入并将所产生的输出发送回​​到您的终端。
+    一个命令通常从一个叫标准输入的地方读取输入，默认情况下，这恰好是你的终端。
+    同样，一个命令通常将其输出写入到标准输出，默认情况下，这也是你的终端。
+
+    command > file      将输出重定向到文件 file                把命令 command 的标准输出写入 file，覆盖原有内容。 （command > /dev/null 写入到它的内容都会被丢弃，会起到"禁止输出"的效果）
+    command < file      将输入重定向为文件 file                使用 file 的内容作为命令 command 的输入。
+    command >> file     将输出以追加的方式重定向到文件 file       把命令 command 的标准输出追加到 file 的末尾，不覆盖原有内容。
+    n > file            将文件描述符 n 的输出重定向到 file       指定文件描述符 n 的输出写入 file，通常 1 为标准输出，2 为标准错误。
+    n >> file           将文件描述符 n 的输出追加到 file        指定文件描述符 n 的输出追加到 file 的末尾。
+    n >& m              将输出文件描述符 n 和 m 合并            把文件描述符 n 的输出重定向到文件描述符 m 的位置。 & 表示重定向的目标不是一个文件，而是一个文件描述符。
+    n <& m              将输入文件描述符 n 和 m 合并            把文件描述符 n 的输入重定向到文件描述符 m 的位置。
+    << tag              使用标记 tag 之间的内容作为输入          使用 Here Document 方式，将一组多行文本作为输入，直到遇到指定的结束标记 tag。
+
+    文件描述符 n：
+        0   标准输入（stdin） — 从键盘或文件中读取输入。
+        1   标准输出（stdout） — 正常输出信息。
+        2   标准错误输出（stderr） — 错误信息输出。
+
+    echo "Hello, World!" > output.txt       将 "Hello, World!" 写入 output.txt，如果文件存在则覆盖。
+    cat < input.txt                          使用 input.txt 作为输入，显示其内容。
+    echo "Another Line" >> output.txt       将 "Another Line" 追加到 output.txt 的末尾。
+    ls non_existing_file 2> error.log        将执行命令后的错误信息保存到 error.log 文件中（ls non_existing_file 2 是列出一个不存在的文件信息命令会产生错误信息）
+    command > result.log 2>&1           将命令的标准输出和错误输出都保存到 result.log 文件中。
+    
+    cat <<EOF
+    This is line 1
+    This is line 2
+    This is line 3
+    EOF
+    cat 命令会读取 EOF 标记之间的内容， 直到遇到 EOF 标记，输入结束。
+
+Shell 文件包含：
+    和其他语言一样，Shell 也可以包含外部脚本。这样可以很方便的封装一些公用的代码作为一个独立的文件。
+
+    两种语法都可以：
+        . filename   # 注意点号(.)和文件名中间有一空格
+        source filename
