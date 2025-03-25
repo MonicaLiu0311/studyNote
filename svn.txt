@@ -1,0 +1,133 @@
+Subversion(SVN) 是一个开源的版本控制系統, 也就是说 Subversion 管理着随时间改变的数据。 这些数据放置在一个中央资料档案库(repository) 中，这个档案库很像一个普通的文件服务器，不过它会记住每一次文件的变动。 这样你就可以把档案恢复到旧的版本，或是浏览文件的变动历史。
+
+repository: 源代码库。 源代码统一存放的地方
+Checkout: 提取。 当你手上没有源代码的时候，你需要从 repository checkout 一份
+Commit: 提交。 当你已经修改了代码，你就需要Commit到repository
+Update: 更新。 当你已经 checkout 了一份源代码， update 一下你就可以和Repository上的源代码同步，你手上的代码就会有最新的变更
+
+SVN 的主要功能：
+    目录版本控制           支持对整个目录和文件的版本控制，而不仅仅是单个文件。
+    完整的版本历史         支持文件和目录的新增、删除、复制和重命名，同时保留完整的历史记录。
+    原子提交              提交操作是原子性的，要么全部成功，要么全部失败，避免部分提交造成的问题。
+    元数据管理            支持自定义键值对属性，并将属性的变化纳入版本控制。
+    多种网络协议支持        支持通过 Apache HTTP、SSH 通道或自定义协议进行远程访问。
+    一致的数据处理         使用二进制差异算法处理文本和二进制文件，高效且节省存储空间。
+    高效的分支和标签        使用类似硬链接的方式创建分支和标签，占用空间小，创建速度快。
+    良好的可扩展性         提供丰富的 API，便于与其他应用程序集成，同时易于维护和扩展
+
+SVN 生命周期：
+    创建版本库： svnadmin create /opt/svn/test
+    检出（创建一个工作副本）： svn checkout svn://192.168.0.1/test --username=user01
+    更新（同步工作副本和版本库）： svn update [verison]
+    执行变更： svn add filename  和  svn commit -m "..."
+    复查变化： svn diff/status
+    修复错误
+    解决冲突
+    提交更改： svn commit -m "..."
+
+SVN 启动模式：
+    在服务端进行SVN版本库的相关配置
+        mkdir /opt/svn
+    创建版本库
+        svnadmin create /opt/svn/test
+    启动服务
+        svnserve -d -r 目录 --listen-port 端口号
+        -r: 配置方式决定了版本库访问方式：
+            单库svnserve方式： 直接指定到版本库，一个svnserve只能为一个版本库工作。  
+                            svnserve -d -r /opt/svn/test
+                            使用类似这样的URL： svn://192.168.0.1/  即可访问runoob版本库
+            多库svnserve方式： 指定到版本库的上级目录，一个svnserve可以为多个版本库工作。  
+                            svnserve -d -r /opt/svn
+                            使用类似这样的URL： svn://192.168.0.1/runoob  即可访问runoob版本库。
+        --listen-port: 指定SVN监听端口，不加此参数，SVN默认监听3690
+
+创建版本库： 
+    svnadmin create /opt/svn/test
+    
+    1. svn 服务配置文件 conf/svnserve.conf。该文件仅由一个 [general] 配置段组成：
+    [general]
+    anon-access = none
+    auth-access = write
+    password-db = /home/svn/passwd
+    authz-db = /home/svn/authz
+    realm = tiku 
+
+    配置项           说明                                   取值范围             默认值     示例                     作用
+    anon-access    控制非鉴权用户（未登录用户）的访问权限            write、read、none    read     anon-access = none      如果设为 none，未登录的用户无法访问仓库。
+    auth-access    控制鉴权用户（已登录用户）的访问权限              write、read、none    write   auth-access = write      如果设为 write，已登录用户可以读写仓库。
+    authz-db       指定权限配置文件 的路径，用于基于路径的访问控制    文件名或绝对路径       authz    authz-db = my_authz     使用 conf/my_authz 文件作为权限配置文件。
+    realm          设置认证域名，用于区分不同的 SVN 仓库          任意文本              UUID    realm = my_project      登录时提示认证域为 my_project。
+
+    2. 用户名口令文件由 svnserve.conf 的配置项 password-db 指定，默认为 conf/passwd。该文件仅由一个 [users] 配置段组成：
+    [users]
+    admin = admin
+    thinker = 123456
+
+    3. 权限配置文件由 svnserve.conf 的配置项 authz-db 指定，默认为 conf/authz。该配置文件由一个 [groups] 配置段和若干个版本库路径权限段组成：
+    [groups]
+    g_admin = admin,thinker
+
+    [admintools:/]
+    @g_admin = rw
+    * =
+
+解决冲突：
+    svn diff
+    svn commit -m "..." （此时发生冲突）
+    svn update
+        p   postpone                推迟解决冲突，跳过当前文件的冲突处理，稍后再处理。     当你不想立即解决冲突时。
+        df  show diff               显示差异，查看本地和远程的不同之处。               当你需要确认具体的冲突内容时。
+        e   edit file               手动编辑文件，打开编辑器直接处理冲突。              需要手动调整代码并解决冲突时。
+        m   merge                   启动外部合并工具，通过可视化工具解决冲突。           如果你安装了合并工具，想通过界面直观解决冲突时。
+        mc  my side of conflict     使用我的版本，保留本地的更改，放弃远程的更改。         确信本地代码是正确的时。
+        tc  their side of conflict  使用对方的版本，保留远程的更改，放弃本地的更改。       认为远程仓库中的代码更正确时。
+        s   show all options        显示所有解决方案，查看更多解决冲突的方式。           想了解或使用其他可选方案时。
+    svn commit -m "..." （解决冲突再次提交）
+
+SVN 版本回退：
+     revert 操作将撤销任何文件或目录里的局部更改。
+     
+     针对未提交的更改：
+         svn revert [-R] filename/directory
+         -R： Recursive，递归对目录及其所有子目录和文件执行撤销操作。
+    针对已提交的更改（回滚会改变本地的文件，改变之后再次提交到服务器）：
+        svn merge -r 22:21 test.txt 
+        svn merge  执行合并操作，将某个版本范围的更改合并到当前工作副本。
+        -r 22:21   指定了版本范围，从 版本 22 回滚到 版本 21。 如果是 -r 21:22，则是将文件从版本 21 更新到版本 22
+
+SVN 查看历史信息：
+    svn log    查看提交历史记录，包括版本号、作者、提交时间和提交信息
+        svn log file.txt    查看 file.txt 的历史提交记录
+        svn log -r 10:20    查看从版本 10 到 20 的提交记录
+        svn log -l 5        查看最近 5 条提交记录
+    svn diff    显示文件或目录的具体更改内容
+        svn diff file.txt             查看 file.txt 当前修改与版本库的差异
+        svn diff -r 10:20 file.txt    查看 file.txt 在版本 10 到 20 之间的差异
+        svn diff --summarize          只显示哪些文件有更改，不显示详细差异
+    svn cat    显示某个文件在特定版本的内容
+        svn cat -r 10 file.txt          查看 file.txt 在版本 10 的内容
+        svn cat file.txt > backup.txt   将最新版本的 file.txt 输出到 backup.txt 文件中
+    svn list    查看仓库中某个目录的文件和子目录列表
+        svn list http://repo_url/trunk      查看仓库中 trunk 目录下的所有文件和文件夹
+        svn list -r 15                      查看特定版本 15 下的文件和目录
+        svn list -v                         以详细模式显示文件的版本号、作者和大小
+
+SVN 分支：
+    SVN 中的分支是通过将代码的某一版本复制到新目录的方式来实现的。
+    
+    svn copy <源路径> <目标路径> -m "创建分支"             仅在本地有效，版本库无记录
+    svn switch <分支路径>
+    svn commit -m "新增分支"                            提交分支创建操作，提交之后分支才会被版本库识别并保存下来，成为正式的分支
+    ...修改
+    svn switch <主分支>
+    svn merge <分支路径>                                合并新建分支的开发内容到主分支
+    svn status                                        冲突文件前有一个 'C'
+    svn resolve --accept working <conflicted-file>    解决冲突后标记文件为已解决
+    svn delete <分支路径> -m "删除分支"
+
+SVN 标签：
+    Tags 主要用于项目开发中的里程碑，比如开发到一定阶段可以单独一个版本作为发布等，它往往代表一个可以固定的完整的版本。
+    
+    svn copy trunk/ tags/v1.0
+    svn status
+    svn commit -m "tags v1.0" 
