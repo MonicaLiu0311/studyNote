@@ -1,0 +1,303 @@
+Git 是一个开源的分布式版本控制系统，不必服务器端软件支持，用于敏捷高效地处理任何或小或大的项目。
+
+Git 与 SVN 的区别：
+    区别点                         Git                                         SVN
+    架构              分布式版本控制，允许每个开发者拥有完整的仓库副本        集中式版本控制，所有数据保存在中央服务器
+    数据存储方式        以元数据方式存储内容，使用 .git 目录管理             按文件存储，使用 .svn 目录管理
+    分支管理           分支非常轻量，创建、合并快速且方便                   分支是版本库中的目录，创建和合并相对复杂
+    版本号             没有统一的全局版本号，每个提交有独立的哈希值           使用递增的全局版本号
+    数据完整性          使用 SHA-1 哈希算法确保数据完整性                 不具备类似的完整性校验
+    离线操作           支持完整的离线操作，包括提交、查看历史记录等            需要联网才能执行大多数操作
+    存储效率           Git 使用对象存储和压缩，存储效率更高                SVN 每次提交都保存完整副本，存储效率相对较低
+    速度              Git 的分布式架构使本地操作更快                    SVN 的集中式架构在网络较慢时效率低
+    合并与分支管理      Git 的分支和合并更高效，适合频繁分支的开发模型         SVN 的分支合并操作较复杂，需要更多的管理
+    安全性            提供数据校验和一致性检查                          数据损坏或丢失时恢复较困难
+    多人协作          允许冲突，然后通过合并来解决问题，适合复杂的协作环境       避免冲突，依靠锁定文件和顺序提交来减少问题
+    适用场景           适用于分布式开发、大型项目和开源协作                 适用于单一团队或不需要复杂分支管理的项目
+
+Git 配置
+    git config 用来配置或读取相应的工作环境变量，这些环境变量决定了 Git 在各个环节的具体工作方式和行为。 
+    这些变量可以存放在以下三个不同的地方：
+        /etc/gitconfig 文件：  系统级别，对所有用户生效。 若使用 git config 时用 --system 选项，读写的就是这个文件。
+        ~/.gitconfig 文件：  用户级别，仅对当前用户生效。 若使用 git config 时用 --global 选项，读写的就是这个文件。
+        工作目录中的 .git/config 文件：  项目级别，仅对当前仓库生效。 每一个级别的配置都会覆盖上层的相同配置，所以 .git/config 里的配置会覆盖 /etc/gitconfig 中的同名变量。
+    
+    查看配置信息：
+        git config --list
+        git config user.name
+    
+    用户信息： 
+        git config --global user.name "test"
+        git config --global user.email test@test.com
+
+        如果用了 --global 选项，那么更改的配置文件就是位于你用户主目录下的 .gitconfig，以后你所有的项目都会默认使用这里配置的用户信息。
+        如果要在某个特定的项目中使用其他名字或者电邮，只要去掉 --global 选项重新配置即可，新的设定保存在当前项目的 .git/config 文件里。
+    
+    生成 SSH 密钥：
+    
+    
+    文本编辑器： 
+        默认 Vim，如果你有其他偏好可以重新设置
+        git config --global core.editor "code --wait"
+
+    差异分析工具：
+        默认 diff，如果你有其他偏好可以重新设置
+        git config --global merge.tool vimdiff
+        
+    fetch 比 pull 安全，因为它仅下载远程仓库的最新更改，但不会自动合并到本地分支。
+    switch 比 checkout 更直观，因为它用于 切换分支 和 创建分支。 checkout 还用于文件相关的操作，比如 恢复文件 或 检出特定版本。
+    git checkout -- file.txt 丢弃工作区中的更改并恢复文件
+
+Git 工作区、暂存区和版本库：
+    工作区 (Working Directory)
+        就是你在电脑上实际看到的项目文件夹，文件的变化首先发生在工作区。
+
+    暂存区 (Stage / Index)
+        存放在项目文件夹中的 .git/index 文件中。
+        当你执行 git add 时，文件的更改会被记录到 暂存区。
+        它像一个“待办清单”，列出了哪些文件的修改会被提交。
+        git status 可以查看哪些文件已经被暂存。
+
+    版本库 (Repository)
+        版本库 中包含所有的提交记录（commit），并且保存在 .git 目录下。
+        当你执行 git commit 时，暂存区的内容会被保存到 版本库。
+        它是 Git 用于管理和追踪文件历史的核心。
+        ".git/objects" 是 Git 的对象库，里面包含了创建的各种对象及内容。
+
+    对工作区文件执行 git add 命令，暂存区的目录树被更新，同时文件内容被写入到对象库中的一个新的对象中，而该对象的ID被记录在暂存区的文件索引中。
+    当执行提交命令 git commit，暂存区的目录树写到版本库（对象库）中，master 分支会做相应的更新。即 master 指向的目录树就是提交时暂存区的目录树。
+    当执行命令 git reset HEAD，暂存区的目录树会被重写，被 master 分支指向的目录树所替换，但是工作区不受影响。
+    当执行命令 git rm --cached <file>，会直接从暂存区删除文件，工作区则不做出改变。
+    当执行命令 git checkout . 或者 git checkout -- <file>，会用暂存区全部或指定的文件替换工作区的文件。这个操作很危险，会清除工作区中未添加到暂存区中的改动。
+    当执行命令 git checkout HEAD . 或者 git checkout HEAD <file>，会用 HEAD 指向的 master 分支中的全部或者部分文件替换暂存区和工作区中的文件。 这个命令也是极具危险性的，因为不但会清除工作区中未提交的改动，也会清除暂存区中未提交的改动。
+    
+    工作区 -> 暂存区： git add filename
+    暂存区 -> 版本库： git commit -m "Commit message"
+    版本库 -> 远程仓库： git push origin branch-name
+    远程仓库 -> 本地版本库： git pull origin branch-name
+                        或者
+                        git fetch origin branch-name
+                        git merge origin/branch-name
+
+
+Git 基本操作:
+    分区：工作区、暂存区、本地版本区、远程仓库。
+    
+    工作区  --- add --->  暂存区  --- commit --->  版本库  --- push --->  远程仓库
+    
+    工作区  <--- checkout ---  版本库  <--- fetch/clone ---  远程仓库
+    
+    工作区  <--- pull ---  远程仓库
+
+    创建、提交与修改：
+        git init:       初始化仓库，生成 .git 目录，该目录包含了资源的所有元数据，其他的项目目录保持不变。
+        git add:        工作区 -> 暂存区。
+        git commit:     暂存区 -> 本地版本区。
+        git push：       本地版本区 -> 远程仓库。
+        git pull:       拉取远程仓库（相当于git fetch + git merge）。
+        git fetch：      查看远程仓库是否更新，有更新则下载。
+        git merge：      合并分支。
+        git status：     查看工作区状态（git stash pop：恢复最近保存的更改，git stash list：列出所有保存的更改）
+        git diff：       查看具体修改内容。
+        git switch      更清晰地切换分支。
+        git checkout：   切换分支（-b 创建并切换到新分支）。
+        git branch：     查看/创建分支（-d：删除分支，-D:强制删除未合并的分支，-M：重命名分支，-r:查看远程分支，-a:查看所有本地和远程分支）。
+        git rm：         将文件从暂存区和工作区中删除。
+        git mv：         移动或重命名工作区文件。
+        git reset：      撤销本地提交（--soft：保留本地修改，--hard：不保留本地修改）。
+        git revert：     撤销远程操作（回滚）。
+        git restore：    恢复或撤销文件的更改。
+        git notes：      添加注释。
+        git show：       显示 Git 对象的详细信息。
+        git config：     配置（--global user.name/email：设置用户信息）。
+        git range-diff： 比较两个提交范围之间的差异。
+        git difftool:   使用工具查看修改内容，如vimdiff等。
+        git mergetool:  使用工具解决冲突，如kdiff3等。
+        git submodule：  管理包含其他 Git 仓库的项目
+
+    提交日志：
+        git log：             查看git日志。
+        git blame <file>：    以列表形式查看指定文件的历史修改记录
+        git shortlog：        生成简洁的提交日志摘要
+        git describe：        生成一个可读的字符串，该字符串基于 Git 的标签系统来描述当前的提交
+        
+        git log [选项] [分支名/提交哈希]
+            -p                  显示每次提交的具体更改内容（补丁），包括新增、删除或修改的代码。
+            --oneline           将提交信息以一行的简洁格式显示，每行仅包括提交哈希和提交信息。
+            --graph             以图形化方式显示分支和合并历史，方便查看分支的走向。
+            --decorate          显示指向每次提交的分支和标签信息，便于识别重要的提交点。
+            -n                  显示最近的指定次数的提交。    git log -n 5
+            --author=<作者>      仅显示由特定作者提交的记录。常用于查找某个开发者的贡献。
+            --since=<时间>       显示从指定时间之后的所有提交。时间格式如 --since="2 weeks ago"。
+            --until=<时间>       显示在指定时间之前的所有提交。
+            --grep=<模式>        根据提交消息中的关键词筛选提交记录，方便快速查找相关提交。
+            --no-merges         排除合并提交，只显示普通的提交记录，通常用于简化提交历史。
+            --stat              显示提交的简要统计信息，包括修改的文件数量和行数变化。
+            --abbrev-commit     使用简短的提交哈希值（通常前 7 位），使输出更加紧凑。
+            --pretty=<格式>      自定义提交信息的显示格式，例如 --pretty=format:"%h - %an, %ar : %s" 显示简化的输出。
+
+        git blame [选项] <文件路径>
+            -L <起始行号>,<结束行号>    仅显示指定行号范围内的代码注释。适用于查看代码块的具体修改历史。        git blame -L 10,20 file.c
+            -C                        追踪重命名或拷贝的代码行，显示原始代码的作者和提交信息。            git blame -C renamed_file.c
+            -M                        检测代码行的移动情况，追踪代码块的来源。                        git blame -M file.c
+            -C -C 或 -M -M            进行更深入的代码溯源，适用于大规模代码重构后的分析。                git blame -M -M refactored_file.c
+            --show-stats            显示作者的贡献行数统计信息，有助于分析代码贡献者的修改量。            git blame --show-stats file.c
+
+
+    远程+上游相关操作：
+        git remote -v                           显示Git保存的远程仓库的简写名与其对应的 URL。
+        git remote rename branch_a branch_b     修改一个远程仓库的简写名 <shortname>。
+                                                （会修改你所有远程跟踪的分支名字，那些过去引用 branch_a/master 的现在会引用 branch_b/master）
+        git remote remove paul                  移除一个远程仓库。
+                                                （所有和这个远程仓库相关的远程跟踪分支以及配置信息也会一起被删除）
+        git remote show <remote>                查看某一个远程仓库的更多信息。
+                                                （甚至包括你运行什么命令会推送到这个远程仓库上）
+        git push -u origin main                 推送至上游的主分支。
+                                                （-u：设置上游，相当于--set-upstream-to）
+        git branch --unset-upstream             取消分支上游。
+        git remote add <shortname> <url>        添加一个新的远程 Git 仓库，同时指定一个方便使用的简写名<shortname>。
+                                                （之后在本地可以通过<shortname>/master访问主分支）
+        git push origin --delete <branchname>   删除远程分支
+
+    注意事项：
+        如果你使用 clone 命令克隆了一个仓库，命令会自动将其添加为远程仓库并默认简写名 <shortname> = origin 。
+        默认情况下，clone 命令会自动设置本地 master 分支跟踪 clone 的远程仓库的 master 分支（或其它名字的默认分支）。
+        运行 git pull 通常会从最初克隆的服务器上抓取数据并自动尝试合并到当前所在的分支。
+
+文件状态的转换流程：
+    未跟踪（Untracked）： 新创建的文件最初是未跟踪的。它们存在于工作目录中，但没有被 Git 跟踪。
+    已跟踪（Tracked）： 通过 git add 命令将未跟踪的文件添加到暂存区后，文件变为已跟踪状态。
+    已修改（Modified）： 对已跟踪的文件进行更改后，这些更改会显示为已修改状态，但这些更改还未添加到暂存区。
+    已暂存（Staged）： 使用 git add 命令将修改过的文件添加到暂存区后，文件进入已暂存状态，等待提交。
+    已提交（Committed）： 使用 git commit 命令将暂存区的更改提交到本地仓库后，这些更改被记录下来，文件状态返回为已跟踪状态。
+
+Git 分支管理：
+    一个分支代表一条独立的开发线，能够让多个开发人员并行工作，开发新功能、修复 bug 或进行实验，而不会影响主代码库。
+    
+    快照： 是每次提交时保存的代码状态，就像是一张项目的时间点照片。 注意： 他只保存修改的部分，其他未修改的部分是引用之前照片中的状态，而不是保存所有的文件。
+    指针： 是指向这些快照的标记，用于定位和管理代码版本。
+    分支： 实际上是指针的别名，方便你在不同的开发方向上快速切换和管理代码。
+
+    解决合并冲突： 手动解决标记冲突文件。
+        git add <conflict-file>  告诉 Git 文件冲突已经解决
+        git commit
+
+恢复和回退：
+    git checkout： 切换分支或恢复文件到指定提交。
+        git checkout HEAD~1 file.txt （恢复文件）
+    git reset： 重置当前分支到指定提交（软重置、混合重置、硬重置）。
+        git reset --soft HEAD~1 （保留代码和索引）
+        git reset --mixed HEAD~1 （保留代码）
+        git reset --hard HEAD~1 （删除更改）
+    git revert： 创建一个新的提交以撤销指定提交，不改变提交历史。
+        git revert HEAD （撤销最新一次提交）
+        git revert abc123 （撤销特定提交）
+    git reflog： 查看历史操作记录，找回丢失的提交。 
+        git reflog （查看操作记录）
+        git checkout HEAD@{5} （切换到第5次操作的状态）
+
+Git 标签：
+    Tag 用于给仓库中的特定提交点加上标记，通常用于发布版本（如 v1.0, v2.0）。
+    Git 使用的标签有两种类型： 轻量级的（lightweight） 和 含附注的（annotated）。
+
+    git tag <tagname>
+        -a 选项意为"创建一个带注解的标签"，不用 -a 选项也可以执行的，但它不会记录这标签是啥时候打的，谁打的，也不会让你添加个标签的注解，推荐一直创建带注解的标签。
+    
+    默认情况下，git push 不会推送标签，你需要显式地推送标签：
+        git push origin <tagname>
+        git push origin --tags  推送所有标签
+
+    删除轻量标签：
+        git tag -d <tagname>  本地删除
+        git push origin --delete <tagname>  远程删除
+
+    附注标签：
+        附注标签存储了创建者的名字、电子邮件、日期，并且可以包含标签信息。附注标签更为正式，适用于需要额外元数据的场景。
+        git tag -a <tagname> -m "message"  创建附注标签
+        git tag -s <tagname> -m "runoob.com标签"  PGP 签名标签命令
+            -s： 表示使用 PGP（Pretty Good Privacy）进行数字签名。需要你本地已有 GPG（GNU Privacy Guard）配置，并生成了密钥。
+
+Git Flow：
+    Git Flow 是一种基于 Git 的分支模型，旨在帮助团队更好地管理和发布软件。
+    Git Flow 主要由以下几类分支组成： master、develop、feature、release、hotfix。
+
+    master 分支：
+        永远保持稳定和可发布的状态。
+        每次发布一个新的版本时，都会从 develop 分支合并到 master 分支。
+
+    develop 分支：
+        用于集成所有的开发分支。
+        代表了最新的开发进度。
+        功能分支、发布分支和修复分支都从这里分支出去，最终合并回这里。
+
+    feature 分支：
+        用于开发新功能。
+        从 develop 分支创建，开发完成后合并回 develop 分支。
+        命名规范：feature/feature-name。
+
+    release 分支：
+        用于准备新版本的发布。
+        从 develop 分支创建，进行最后的测试和修复，然后合并回 develop 和 master 分支，并打上版本标签。
+        命名规范：release/release-name。
+
+    hotfix 分支：
+        用于修复紧急问题。
+        从 master 分支创建，修复完成后合并回 master 和 develop 分支，并打上版本标签。
+        命名规范：hotfix/hotfix-name。
+
+    Git Flow 工作流程：
+        初始化 Git Flow。初始化时，你需要设置分支命名规则和默认分支。
+            git flow init
+        创建功能分支。当开始开发一个新功能时，从 develop 分支创建一个功能分支。 完成开发后，将功能分支合并回 develop 分支，并删除功能分支。
+            git flow feature start new-feature
+            git flow feature finish new-feature
+        创建发布分支。当准备发布一个新版本时，从 develop 分支创建一个发布分支。 在发布分支上进行最后的测试和修复，准备好发布后，将发布分支合并回 develop 和 master 分支，并打上版本标签。
+            git flow release start v1.0.0
+            git flow release finish v1.0.0
+        创建修复分支。当发现需要紧急修复的问题时，从 master 分支创建一个修复分支。修复完成后，将修复分支合并回 master 和 develop 分支，并打上版本标签。
+            git flow hotfix start hotfix-1.0.1
+            git flow hotfix finish hotfix-1.0.1
+
+    优点和缺点
+        优点
+            明确的分支模型： 清晰的分支命名和使用规则，使得开发过程井然有序。
+            隔离开发和发布： 开发和发布过程分离，减少了开发中的不确定性对发布的影响。
+            版本管理： 每次发布和修复都会打上版本标签，方便回溯和管理。
+        
+        缺点
+            复杂性： 对于小型团队或简单项目，Git Flow 的分支模型可能显得过于复杂。
+            频繁的合并： 在大型团队中，频繁的分支合并可能导致合并冲突增加。
+
+Git 进阶操作:
+    交互式暂存： 逐块选择要暂存的更改，精细控制提交内容。
+        git add -p
+            逐块选择要暂存的更改。.git add 命令可以选择性地将文件或文件的一部分添加到暂存区，这在处理复杂更改时非常有用。
+            y： yes 暂存当前块
+            n： no 跳过当前块
+            s： split 拆分当前块
+            e： edit 手动编辑当前块
+            q： quit 退出暂存
+    Git Stash： 临时保存工作进度，方便切换任务。
+        保存当前工作进度： git stash
+        查看存储的进度： git stash list
+        应用最近一次存储的进度： git stash apply
+        应用并删除最近一次存储的进度： git stash pop
+        删除特定存储： git stash drop "stash@{n}"
+        清空所有存储： git stash clear
+    Git Rebase： 将一个分支上的更改移到另一个分支之上，保持提交历史线性，减少合并时的冲突。
+        git rebase <branchname>
+        将当前分支变基到 branchname 分支
+        注意：是基于目标分支再次更新当前分支，减少冲突，目标分支不会改变。
+        举例：当前分支发生了新的修改 B，将目标分支最新状态 A 同步到当前分支上再接着修改，所以当前分支就变成了 A B。
+        
+        git rebase -i <commit>
+        交互式变基，允许你在变基过程中编辑、删除或合并提交：
+            pick： 保留提交
+            reword： 修改提交信息，保留代码不变
+            edit： 编辑提交，修改代码或者重新调整该提交
+            squash： 将当前提交与前一个提交合并，保留两者的提交信息
+            fixup： 将当前提交与前一个提交合并，不保留当前提交信息
+            drop： 删除提交
+    Git Cherry-Pick： 选择特定提交并应用到当前分支。
+        git cherry-pick <commit>
+        处理拣选冲突： 如果拣选过程中出现冲突，解决冲突后使用 git cherry-pick --continue 继续拣选。
