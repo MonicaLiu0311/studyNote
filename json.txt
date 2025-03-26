@@ -1,0 +1,39 @@
+JSON 通常用于与服务端交换数据。在接收服务器数据时一般是字符串。
+
+JSON.parse() 将数据转换为 JavaScript 对象: JSON.parse(text[, reviver])
+    text: 必需， 一个有效的 JSON 字符串。
+    reviver: 可选，一个转换结果的函数， 将为对象的每个成员调用此函数。
+
+JSON.stringify() 将 JavaScript 对象转换为字符串： JSON.stringify(value[, replacer[, space]])
+    value： 必需， 要转换的 JavaScript 值（通常为对象或数组）。
+    replacer: 可选。用于转换结果的函数或数组。
+              如果 replacer 为函数，则 JSON.stringify 将调用该函数，并传入每个成员的键和值。使用返回值而不是原始值。如果此函数返回 undefined，则排除成员。根对象的键是一个空字符串：""。
+              如果 replacer 是一个数组，则仅转换该数组中具有键值的成员。成员的转换顺序与键在数组中的顺序一样。当 value 参数也为数组时，将忽略 replacer 数组。
+    space: 可选，文本添加缩进、空格和换行符，如果 space 是一个数字，则返回值文本在每个级别缩进指定数目的空格，如果 space 大于 10，则文本缩进 10 个空格。space 也可以使用非数字，如：\t。
+
+JSON.parse() 和 JSON.stringify() 都不能存储 Date 对象，需要先转换成字符串再转换成 Date 对象。
+    var myJSON = '{ "name":"Runoob", "initDate":"2013-12-14", "site":"www.runoob.com"}';
+    var obj = JSON.parse(myJSON);
+    obj.initDate = new Date(obj.initDate);
+    document.getElementById("demo").innerHTML = obj.name + "创建日期: " + obj.initDate;
+    
+    var obj = { "name":"Runoob", "initDate":new Date(), "site":"www.runoob.com"};
+    var myJSON = JSON.stringify(obj);
+    document.getElementById("demo").innerHTML = myJSON;
+
+JSON 不允许包含函数，JSON.stringify() 会删除 JavaScript 对象的函数，包括 key 和 value， 所以需要在执行 JSON.stringify() 前将函数转换为字符串，在执行 JSON.parse 前将字符串转换为函数：
+    var obj = { "name":"Runoob", "alexa":function () {return 10000;}, "site":"www.runoob.com"};
+    obj.alexa = obj.alexa.toString();
+    var myJSON = JSON.stringify(obj);
+    document.getElementById("demo").innerHTML = myJSON;
+
+    var myJSON = '{ "name":"Runoob", "alexa":"function () {return 10000;}", "site":"www.runoob.com"}';
+    var obj = JSON.parse(myJSON);
+    obj.alexa = eval("(" + obj.alexa + ")");
+    document.getElementById("demo").innerHTML = obj.name + " Alexa 排名：" + obj.alexa();
+
+    eval() 可以直接运行多行代码，类似于在脚本中写代码。
+
+Jsonp(JSON with Padding) 是 json 的一种"使用模式"，可以让网页从别的域名（网站）那获取资料，即跨域读取数据。
+为什么我们从不同的域（网站）访问数据需要一个特殊的技术( JSONP )呢？这是因为同源策略。
+同源策略 (Same-Origin Policy) 是浏览器的一项安全机制，限制网页上的 JavaScript 只能访问与自身相同源（协议、域名、端口相同）的资源。
