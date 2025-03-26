@@ -9,7 +9,7 @@ MSVC是什么？干什么？怎么用？
 MSBuild是什么？干什么？怎么用？
 	MSBuild是一套构建工具，用于帮助软件产品创建流程的自动化，包括编译源代码、打包、测试、部署和创建文档，后来变成Visual Studio的一部分，但不依赖VS。
 
-MSVC： 	vs的c/c++编译器
+MSVC： 		vs的c/c++编译器
 .sln: 		msbuild解析.sln
 msbuild:	cl.exe,link.exe
 VS > MSBuild > MSVC > cl.exe, link.exe

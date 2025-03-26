@@ -1,0 +1,149 @@
+VCPKG + CMake
+	1. VCPKG是什么？干什么？怎么用？
+	VCPKG is a tool for managing packages(Windows/Linux/MacOS).
+	Vcpkg helps you manage C and C++ libraries on Windows, Linux and MacOS.
+	clone - install - integrate(在linux上直接用)。
+	
+	integrate	project
+				poershell/bash
+	
+	速度差异
+	vcpkg
+	apt
+	
+	
+	Debug/Realease：
+	代码优化
+	调试信息
+	
+	.pdb
+	
+	2. port的使用流程？
+	VS2019: 
+		CMakeSetting.json: 		"cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake"
+		CMakeLists.txt: 		find_package()找到share/.camke文件执行配置过程,target_link_libraries()找到指定的库链接到target上
+		Configure： 				ALL_BUILD.vcxprj/.vcxprj.filter, .sln, ZERO_CHECK.vcxprj/vcxprj.filter 
+		Build: 					.exe, .pdb（Debug？）, .dll, .lib...
+		Build .sln: 			ALL_BUILD.vcxprj.user, .vs ？
+	
+	Nijia:
+		TOOLCHAIN:				-DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake
+		CMakeLists.txt: 		find_package()找到share/.camke文件执行配置过程,target_link_libraries()找到指定的库链接到target上
+		Configure： 				build.ninja .
+		Build: 					.exe, .pdb, .dll, .lib ...
+		
+	GCC:
+		TOOLCHAIN:				"-DCMAKE_TOOLCHAIN_FILE=/home/vliumonica/vcpkg/scripts/buildsystems/vcpkg.cmake"
+		CMakeLists.txt: 		find_package()找到share/.camke文件执行配置过程,target_link_libraries()找到指定的库链接到target上
+		Configure： 				Makefile
+		Build: 					.exe, .so(动态库), .a(静态库) ...
+	
+	Command:
+		VS2019:
+			Configure：			cmake ../ -G "Visual Studio 16 2019" -A Win32 -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON
+								(用的是VCPKG的库再加上： -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake)
+			Build:				cmake --build .
+		Nijia：
+			Configure：			cmake ../ -G "Ninja" -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON
+								(用的是VCPKG的库再加上： -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake)
+			Build:				cmake --build .
+			
+		GCC:
+			Configure：			cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=ON
+								(用的是VCPKG的库再加上： -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake)
+			Build:				cmake --build .
+			
+	3. 创建一个简单的port，并且使用它。
+	portName: export_test.
+	usageName: usage_test.
+	
+	
+	
+	configure
+	4.Compile和Build的区别？
+	编译器工作的四个阶段：预处理、编译、汇编、链接。
+	Compile 就是检查语法的，检查没错了，将它们生成相应的二进制文件(OBJ)。
+	Build 则是指compile和link一起做。link是将obj文件链接起来，并检查它们是否具备真正可执行的条件。如果检查通过，则将obj文件链接为exe或dll文件。
+	
+	
+	4.CMake是什么？干什么？怎么用？
+	CMake是配置器。
+	Cmake作用： 根据源文件和CMakeLists.txt，跨IDE生成对应的工程文件/解决方案/Makefile，然后就可以使用make指令快速编译生成exe。
+	makefile关系到了整个工程的编译规则--“自动化编译”。
+	
+	
+	5.VCPKG怎么在CMake/MSBuild 工程中集成。
+	CMake：
+		第一种： 用命令行指定 -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake
+		第二种： 在CMakeSetting.json中设置键值对  "cmakeCommandArgs": "-DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/clean/vcpkg/scripts/buildsystems/vcpkg.cmake"
+	MSBuild：
+		可以直接使用，但是默认只能找到include文件夹，需要手动添加include/xxx等类似文件夹。
+		不想使用VCPKG库可以关闭 property->Configuration Properties->vcpkg ->Use Vcpkg 为 No。
+	
+	
+	6. VCPKG的目录结构。
+	buildtrees：	源码文件。
+	docs：		文档和实例。
+	downloads：	源码压缩包的下载存放路径（安装时vcpkg首先搜索此处）。(tools)  cache?
+	installed：	安装目录（按照规则集中存放，集成时，实质上是添加此目录到搜索路径）。
+	packages：	port存档路径。 (修改适配用户，之后postcheck,失败就不会copy，成功之后复制到installed，保存注册表)
+	scripts：	脚本（CMake...）.
+	toolsrc：	相关组件的源码。   移动到vcpkgtool
+	triplets：	目标平台的设置。
+	versions：	版本信息。
+
+
+	7. GNU是什么？干什么？怎么用？
+	GNU 计划最终实现了“打造一套自由、开源的操作系统”的初衷，但该操作系统并非完全产自 GNU 计划，GNU/Linux 操作系统（人们更习惯称为 Linux 操作系统）。
+	一系列能进行人机交互操作并运行其它程序的程序。
+	
+	8. GCC是什么？干什么？怎么用？
+	全拼为GNU Compiler Collection，是一款功能强大的、性能优越的多平台编译器。
+	
+	
+	9. gcc和g++的主要区别
+	# 对于 *.c和*.cpp文件，gcc分别当做c和cpp文件编译（c和cpp的语法强度是不一样的）。
+	# 对于 *.c和*.cpp文件，g++则统一当做cpp文件编译。
+	# 使用g++编译文件时，g++会自动链接标准库STL，而gcc不会自动链接STL。
+	# gcc在编译C文件时，可使用的预定义宏是比较少的。
+	# 在用gcc编译c++文件时，为了能够使用STL，需要加参数 –lstdc++ ，但这并不代表 gcc –lstdc++ 和 g++等价。
+	# gcc在编译cpp文件时/g++在编译c文件和cpp文件时（这时候gcc和g++调用的都是cpp文件的编译器），会加入一些额外的宏，这些宏如下：
+		#define __GXX_WEAK__ 1
+		#define __cplusplus 1
+		#define __DEPRECATED 1
+		#define __GNUG__ 4
+		#define __EXCEPTIONS 1
+		#define __private_extern__ extern6
+	
+	
+	10. MSVC是什么？干什么？怎么用？
+	全称Microsoft Visual C++ ，是C/C++的编译器，后来变成Visual Studio的一部分。
+	编译器生成通用对象文件格式对象 (.obj)，链接器生成可执行文件 (.exe) 或动态链接库 (DLL)。
+	
+	
+	11. MSVC和GCC的区别？
+	MSVC 通常用于编译Windows应用；GCC 则可以用来编译Windows/Linux/MacOS等所有平台的应用。
+	
+	
+	12. MSBuild是什么？干什么？怎么用？
+	MSBuild是一套构建工具，用于帮助软件产品创建流程的自动化，包括编译源代码、打包、测试、部署和创建文档，后来变成Visual Studio的一部分，但不依赖VS。
+	
+	
+	13. Visual Studio是什么？
+	VS是一个基本完整的开发工具集，它包括了整个软件生命周期中所需要的大部分工具，如配置工具+文本编辑器+编译器等。
+	Visual Studio IDE 可以编辑、调试和生成代码。
+	
+	
+	MSVC： 		vs的c/c++
+	.sln: 		msbuild解析.sln
+	msbuild:	cl.exe,link.exe
+	
+	
+	小结：
+	VCPKG：	库管理工具。
+	CMake：	配置工具。
+	VS：		配置工具+文本编辑器+编译器（MSVC）。
+	MSBuild:构建工具。
+	Ninji:	编译器。
+	GCC：	编译器。
+	G++：	编译器。
