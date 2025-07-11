@@ -1,0 +1,722 @@
+Docker 是一个开源的应用容器引擎，基于 Go 语言，可以让开发者打包他们的应用以及依赖包到一个轻量级、可移植的容器中，然后发布到任何流行的 Linux 机器上，也可以实现虚拟化。
+容器完全使用沙箱机制，相互之间不会有任何接口（类似 iPhone 的 app），更重要的是容器性能开销极低。
+
+应用场景：
+	1. Web应用的自动化打包和发布。
+	2. 自动化测试和持续集成、发布。
+	3. 在服务型环境中部署和调整数据库或其他后台应用。
+	4. 扩展现有的OpenShift或Cloud Foundry平台搭建PaaS环境。
+
+优点：
+	1. 快速、一致地交付应用程序：在标准化环境中简化开发生命周期。
+	2. 响应式部署和扩展：容器可在多种环境中高度可移植。
+	3. 在同一硬件上运行更多工作负载：轻便高效，利用计算资源。
+
+Docker 架构：
+	Docker 使用客户端-服务器 (C/S) 架构模式，使用远程 API 来管理和创建 Docker 容器，其中包括多个关键组件，确保容器化应用的高效构建、管理和运行。
+	Docker 的架构设计使得开发者能够轻松地将应用程序与其所有依赖封装在一个可移植的容器中，并在不同的环境中一致地运行。
+	Docker 容器通过 Docker 镜像来创建，容器与镜像的关系类似于面向对象编程中的对象与类。
+
+Docker 架构的工作流程：
+	构建镜像：使用 Dockerfile 创建镜像。
+	推送镜像到注册表：将镜像上传到 Docker Hub 或私有注册表中。
+	拉取镜像：通过 docker pull 从注册表中拉取镜像。
+	运行容器：使用镜像创建并启动容器。
+	管理容器：使用 Docker 客户端命令管理正在运行的容器（例如查看日志、停止容器、查看资源使用情况等）。
+	网络与存储：容器之间通过 Docker 网络连接，数据通过 Docker 卷或绑定挂载进行持久化。
+
+Docker 的核心组件及其工作机制：
+	Docker 客户端（Docker Client）
+		Docker 客户端是用户与 Docker 守护进程交互的命令行界面（CLI，Command Line Interface）。
+		它是用户与 Docker 系统的主要交互方式，用户通过 Docker CLI 发出命令，这些命令被发送到 Docker 守护进程，由守护进程执行相应的操作。
+		
+		功能：允许用户使用命令与 Docker 守护进程通信，如创建容器、构建镜像、查看容器状态等。
+		交互方式：客户端与守护进程之间通过 REST API 或 Unix 套接字通信。常用的命令行工具是 docker，通过它用户可以发出各种操作命令。
+		常用命令：
+			docker run：运行容器。
+			docker ps：列出正在运行的容器。
+			docker build：构建 Docker 镜像。
+			docker exec：在容器中执行命令
+	
+	Docker 守护进程（Docker Daemon）
+		是 Docker 架构的核心，通常是 dockerd，负责管理容器生命周期、构建镜像、分发镜像等任务。
+		守护进程通常以后台进程的方式运行，监听来自客户端的请求，并且通过 Docker API 执行这些请求。
+		守护进程将负责容器、镜像等 Docker 对象的管理，并根据请求的参数启动容器、删除容器、修改容器配置等。
+		
+		功能：
+			启动和停止容器。
+			构建、拉取和推送镜像。
+			管理容器的网络和存储。
+			启动、停止、查看容器日志等。
+			与 Docker 注册表进行通信，管理镜像的存储与分发。
+		
+		启动 Docker 守护进程命令（通常是自动启动的）：sudo systemctl start docker
+
+	Docker 引擎 API（Docker Engine API）
+		是 Docker 提供的 RESTful 接口，允许外部客户端与守护进程进行通信。
+		通过这个 API，用户可以执行各种操作，如启动容器、构建镜像、查看容器状态等。
+		API 提供了 HTTP 请求的接口，支持跨平台调用。
+
+		功能：
+			向 Docker 守护进程发送 HTTP 请求，实现容器、镜像的管理。
+			提供 RESTful 接口，允许通过编程与 Docker 进行交互。
+		
+		可以通过 curl 或其他 HTTP 客户端访问 Docker 引擎 API。 例如，查询当前 Docker 守护进程的版本：
+		curl --unix-socket /var/run/docker.sock http://localhost/version
+
+	Docker 容器（Docker Containers）
+		容器是 Docker 的执行环境，它是轻量级、独立且可执行的软件包。
+		容器是从 Docker 镜像启动的，包含了运行某个应用程序所需的一切——从操作系统库到应用程序代码。
+		容器在运行时与其他容器和宿主机共享操作系统内核，但容器之间的文件系统和进程是隔离的。
+
+		功能：
+			提供独立的运行环境，确保应用程序在不同的环境中具有一致的行为。
+			容器是临时的，通常在任务完成后被销毁。
+			容器的生命周期是由 Docker 守护进程管理的。容器可以在任何地方运行，因为它们不依赖于底层操作系统的配置，所有的运行时依赖已经封装在镜像中。
+
+		启动一个容器：docker run -d ubuntu
+
+	Docker 镜像（Docker Images）
+		镜像是容器的只读模板。
+		每个镜像都包含了应用程序运行所需的操作系统、运行时库、环境变量和应用代码等。
+		镜像是静态的，用户可以根据镜像启动容器。
+
+		功能：
+			镜像是构建容器的基础，每个容器实例化时都会使用镜像。
+			镜像是只读的，不同容器使用同一个镜像时，容器中的文件系统层是独立的。
+			Docker 镜像可以通过 docker pull 从 Docker Hub 或私有注册表拉取，也可以通过 docker build 从 Dockerfile 构建。
+
+		拉取 Ubuntu 镜像： docker pull ubuntu
+
+	Docker 仓库（Docker Registries）
+		仓库是用来存储 Docker 镜像的地方，最常用的公共仓库是 Docker Hub。
+
+		功能：
+			存储 Docker 镜像。
+			提供镜像的上传和下载功能。
+			Docker Hub 提供了大量官方和社区维护的镜像，如 Ubuntu、Nginx、MySQL 等。
+
+		推送镜像到 Docker Hub： docker push <username>/<image_name>
+
+	Docker Compose
+		Docker Compose 是一个用于定义和运行多容器 Docker 应用的工具。 
+		可以把 Docker Compose 想象成 “一键启动多个容器的遥控器”。
+		通过 Compose，用户可以使用一个 docker-compose.yml 配置文件定义多个容器（服务），并可以通过一个命令启动这些容器。
+		Docker Compose 主要用于开发、测试和部署多容器的应用。
+
+		功能：
+			批量管理容器。
+			通过 YAML 文件自动配置网络。
+			环境变量和依赖管理。 比如“数据库先启动，后端再启动”这种依赖关系，Compose 会自动处理。
+
+		创建一个简单的 docker-compose.yml 文件来配置一个包含 Web 服务和数据库服务的应用：
+			version: '3'
+			services:
+			  web:
+				image: nginx
+				ports:
+				  - "8080:80"
+			  db:
+				image: mysql
+				environment:
+				  MYSQL_ROOT_PASSWORD: example
+
+		启动 Compose 定义的所有服务： docker-compose up
+
+						没有 Compose								有 Compose
+		启动多个容器		需多次运行 docker run，命令冗长易错			一个 docker-compose up 搞定所有容器
+		容器间连接		手动配置网络（--network）或链接（--link）	自动在同一网络内，直接通过服务名通信（如 db:3306）
+		环境变量管理		每个 docker run 单独传 -e 参数				在 docker-compose.yml 中统一定义
+		依赖顺序			需手动控制启动顺序（比如先启动数据库）			用 depends_on 自动处理依赖
+		持久化存储		手动挂载 Volume（-v 参数）					在 YAML 文件中声明，自动创建和挂载
+
+	Docker Swarm
+		Docker Swarm 是 Docker 提供的集群管理和调度工具。 
+		可以把 Docker Swarm 想象成 “容器集群的指挥官”，它的作用是管理多台机器（服务器）上的 Docker 容器，让它们像一个整体一样工作。
+		Swarm 可以实现容器的负载均衡、高可用性和自动扩展等功能。
+
+		功能：
+			管理多节点 Docker 集群。
+			通过调度器管理容器的部署和扩展。
+
+		初始化 Swarm 集群：docker swarm init
+
+					没有 Swarm						有 Swarm
+		运行规模		单机运行容器						多台机器组成集群，统一管理
+		容灾能力		机器挂了，服务就断了				自动迁移容器到健康节点，服务不中断
+		扩容/缩容		手动 docker run 或 docker stop	一条命令即可扩容（docker service scale）
+		负载均衡		需手动配置 Nginx/HAProxy			Swarm 自带负载均衡（VIP/DNS轮询）
+		服务发现		需手动管理 IP 或域名				自动 DNS 解析，容器间直接用服务名通信
+		滚动更新		手动停止旧容器，再启动新版本			docker service update 自动滚动更新
+
+		没有 Swarm：像小餐馆，只有一个厨师（服务器），忙不过来或生病了（宕机），生意就停了。
+		有 Swarm：像连锁餐厅，有多名厨师（集群），一个请假了其他人顶替，顾客无感知。
+
+					Docker Compose				Docker Swarm
+		适用场景		单机开发/测试（本地或单服务器）	多机生产环境（集群部署）
+		管理对象		容器（Containers）			服务（Services，可跨节点动态调度）
+		高可用		不支持（单点故障）				支持（自动故障转移）
+		扩容能力		需手动改 YAML 并重启			一条命令扩容（docker service scale）
+		网络/存储		本地网络和 Volume				跨节点网络和分布式存储（需配置）
+		典型命令		docker-compose up			docker stack deploy（基于 Compose 文件）
+
+		Compose 是 “单机编排”（管理单台机器上的多个容器）。
+		Swarm 是 “集群编排”（管理多台机器组成的集群，类似 Kubernetes 的简化版）。
+
+	Docker 网络（Docker Networks）
+		Docker 网络允许容器之间相互通信，并与外部世界进行连接。
+		Docker 提供了多种网络模式来满足不同的需求，如 bridge 网络（默认）、host 网络和 overlay 网络等。
+
+		功能：
+			管理容器间的网络通信。
+			支持不同的网络模式，以适应不同场景下的需求。
+
+		模式			隔离性	跨主机通信	性能		典型用途
+		bridge		高		不支持		中		本地开发、单机多容器
+		host		无		不支持		最高		高性能负载、不需要隔离时
+		overlay		高		支持			中		Swarm/K8s 集群多机通信
+		none		最高		不支持		无		完全隔离的安全场景
+		macvlan		低		支持			高		容器需伪装成物理设备
+
+		需求场景					推荐模式		理由
+		本地开发，多容器互联		bridge		简单隔离，端口映射灵活。
+		高性能，低延迟				host		绕过虚拟网络，零开销。
+		跨主机集群（Swarm/K8s）	overlay		原生支持多机通信，自动加密。
+		完全离线任务				none		绝对安全，无网络暴露风险。
+		容器需伪装成物理设备		macvlan		直接绑定物理网卡，高性能低延迟。
+
+		创建一个自定义网络并将容器连接到该网络：
+			docker network create my_network
+			docker run -d --network my_network ubuntu
+
+	Docker 卷（Docker Volumes）
+		Docker 卷是一种数据持久化机制，允许数据在容器之间共享，并且独立于容器的生命周期。
+		与容器文件系统不同，卷的内容不会随着容器的销毁而丢失，适用于数据库等需要持久存储的应用。
+
+		功能：
+			允许容器间共享数据。
+			保证数据持久化，独立于容器的生命周期。
+
+		创建并挂载卷：
+			docker volume create my_volume
+			docker run -d -v my_volume:/data ubuntu
+
+Docker Hello World：
+	$ docker run ubuntu:15.10 /bin/echo "Hello world"
+	Docker 以 ubuntu15.10 镜像创建一个新容器，然后在容器里执行 bin/echo "Hello world"，然后输出结果。
+	
+	$ docker run -i -t ubuntu:15.10 /bin/bash
+	参数 -i -t，让 docker 运行的容器实现"对话"的能力：
+		-i	--interactive	保持 STDIN 打开，允许输入
+		-t	--tty			分配伪终端（TTY），使输出格式化
+	
+	运行 exit 命令或者 CTRL+D 来退出容器。
+
+	$ docker ps
+		CONTAINER ID   IMAGE          COMMAND                   CREATED         STATUS         PORTS     NAMES
+		d372650a3c4d   ubuntu:15.10   "/bin/sh -c 'while t…"   3 seconds ago   Up 3 seconds             laughing_goldstine
+	CONTAINER ID: 容器 ID。
+	IMAGE: 使用的镜像。
+	COMMAND: 启动容器时运行的命令。
+	CREATED: 容器的创建时间。
+	STATUS: 容器状态。状态有7种：
+		created（已创建）
+		restarting（重启中）
+		running 或 Up（运行中）
+		removing（迁移中）
+		paused（暂停）
+		exited（停止）
+		dead（死亡）
+	PORTS: 容器的端口信息和使用的连接类型（tcp\udp）。
+	NAMES: 自动分配的容器名称。
+	
+	$ docker logs [CONTAINER ID | NAMES]
+	查看容器内的标准输出
+
+
+Docker 容器：
+	容器是操作系统级别的虚拟化，不需要运行完整的操作系统，启动和运行更为高效。
+
+	镜像与容器的关系：
+		镜像（Image）：容器的静态模板，包含了应用程序运行所需的所有依赖和文件。镜像是不可变的。
+		容器（Container）：镜像的一个运行实例，具有自己的文件系统、进程、网络等，且是动态的。容器从镜像启动，并在运行时保持可变。
+
+	常用的 Docker 客户端命令：
+		命令						功能											示例
+		docker run				启动一个新的容器并运行命令						docker run -d ubuntu
+		docker ps				列出当前正在运行的容器							docker ps
+		docker ps -a			列出所有容器（包括已停止的容器）					docker ps -a
+		docker exec				在运行的容器中执行命令							docker exec -it container_name bash
+		docker stop				停止一个或多个容器								docker stop container_name
+		docker start			启动已停止的容器								docker start container_name
+		docker restart			重启一个容器									docker restart container_name
+		docker rm				删除一个或多个容器								docker rm container_name
+		docker logs				查看容器的日志									docker logs container_name
+		docker inspect			获取容器或镜像的详细信息						docker inspect container_name
+		docker exec -it			进入容器的交互式终端							docker exec -it container_name /bin/bash
+		docker-compose up		启动多容器应用（从 docker-compose.yml 文件）	docker-compose up
+		docker-compose down		停止并删除由 docker-compose 启动的容器、网络等	docker-compose down
+		docker info				显示 Docker 系统的详细信息						docker info
+		docker version			显示 Docker 客户端和守护进程的版本信息			docker version
+		docker stats			显示容器的实时资源使用情况						docker stats
+		docker login			登录 Docker 仓库								docker login
+		docker logout			登出 Docker 仓库								docker logout
+
+		docker build			使用 Dockerfile 构建镜像						docker build -t my-image .
+		docker images			列出本地存储的所有镜像							docker images
+		docker pull				从 Docker 仓库拉取镜像							docker pull ubuntu
+		docker push				将镜像推送到 Docker 仓库						docker push my-image
+		docker rmi				删除一个或多个镜像								docker rmi my-image
+
+		docker network create		创建 Docker 网络							docker network create -d bridge <network>
+		docker network ls			列出所有 Docker 网络						docker network ls
+		docker network rm			删除指定的网络								docker network rm <network>
+		docker network connect		连接容器到网络								docker network connect <network> <container>
+		docker network disconnect	断开容器与网络的连接						docker network disconnect <network> <container>
+
+		docker volume ls		列出所有 Docker 卷							docker volume ls
+		docker volume create	创建一个 volume								docker volume create <name>
+		docker volume inspect	查看 volume 详情								docker volume inspect <name>
+		docker volume rm		删除一个 volume								docker volume rm <name>	
+		docker volume prune		清理未使用的 volumes
+
+	常用选项说明:
+		-d：--detach 后台运行容器，例如 docker run -d ubuntu。
+		-it：--interactive --tty 以交互式终端运行容器，例如 docker exec -it container_name bash。
+		-t：--tty 为镜像指定标签，例如 docker build -t my-image .。
+
+	获取镜像：$ docker pull ubuntu
+	启动容器：$ docker run -it ubuntu /bin/bash
+	退出容器：运行 exit 命令或者 CTRL+D 
+	查看容器：$ docker ps -a
+	停止容器：$ docker stop [CONTAINER ID | NAMES] 
+	启动容器：$ docker start [CONTAINER ID | NAMES] 
+	重启容器：$ docker restart [CONTAINER ID | NAMES] 
+	查看容器内的标准输出：$ docker logs [CONTAINER ID | NAMES]
+	进入容器:在使用 -d 参数时启动容器时，容器会运行在后台，这时如果要进入容器，可以通过以下命令进入：
+		docker attach：允许你与容器的标准输入（stdin）、输出（stdout）和标准错误（stderr）进行交互。
+		docker exec：推荐大家使用 docker exec 命令，因为此命令会退出容器终端，但不会导致容器的停止。
+	导出容器：$ docker export [CONTAINER ID | NAMES] > ubuntu.tar
+	导入容器：$ cat ubuntu.tar | docker import - test/ubuntu:v1
+	删除容器：$ docker rm -f [CONTAINER ID | NAMES]
+	清理掉所有处于终止状态的容器：$ docker container prune
+
+	运行一个 web 应用：	docker pull nginx
+						docker run -d -p 80:80 nginx
+
+Docker 镜像：
+
+	创建镜像：
+		1、从已经创建的容器中更新镜像，并且提交这个镜像
+			使用已有的镜像来创建一个容器：docker run -t -i ubuntu:15.10 /bin/bash
+			进入容器后更新系统：	apt-get update
+								apt-get upgrade -y
+			修改完毕后退出容器：exit
+			提交容器副本成为新的镜像：docker commit -m="描述信息" -a="作者" 容器ID monica/ubuntu:v2
+			查看新镜像：docker images
+			使用新镜像来启动一个容器：docker run -t -i --name monica_ubuntu monica/ubuntu:v2 /bin/bash
+		2、用 Dockerfile 指令来创建一个新的镜像
+			创建一个 Dockerfile 文件：
+				FROM rockylinux/rockylinux:8
+				LABEL version="1.0"
+				RUN /bin/echo 'root:123456' |chpasswd
+				RUN useradd monica
+				RUN /bin/echo 'monica:123456' |chpasswd
+				RUN /bin/echo -e "LANG=\"en_US.UTF-8\"" >/etc/default/local
+				EXPOSE 22
+				EXPOSE 80
+				CMD /usr/sbin/sshd -D
+			构建一个镜像：	docker build -t monica/rockylinux:8 D:\software\DataMonica(Dockerfile文件路径)
+						-t 要创建的目标镜像名
+			查看新镜像：docker images
+			使用新镜像创建容器：docker run -t -i --name monica_rockylinux monica/rockylinux:8 /bin/bash
+
+	设置镜像标签：docker tag 镜像ID monica/rockylinux:标签名
+
+Docker 容器连接：
+	指定容器端口绑定到主机端口:
+		-P：容器内部端口随机映射到主机的端口。
+		-p：容器内部端口绑定到指定的主机端口。
+
+		docker run -d -P --name test-web nginx
+		docker run -d -p 80:80 --name my-web nginx
+		docker run -d -p 127.0.0.1:5000:5000/udp --name my-web1 nginx
+		
+		PS C:\Users\Administrator> docker ps
+		CONTAINER ID   IMAGE     COMMAND                   CREATED         STATUS          PORTS                              NAMES
+		ba86b95241f3   nginx     "/docker-entrypoint.…"   8 minutes ago   Up 8 minutes    0.0.0.0:32768->80/tcp              test-web
+		02a552dc3c41   nginx     "/docker-entrypoint.…"   26 hours ago    Up 10 minutes   0.0.0.0:80->80/tcp                 my-web
+		cabffd334d19   nginx     "/docker-entrypoint.…"   3 seconds ago   Up 3 seconds    80/tcp, 127.0.0.1:5000->5000/udp   my-web1
+
+	Docker 容器互联:
+		docker 有一个连接系统允许将多个容器连接在一起，共享连接信息。
+		docker 连接会创建一个父子关系，其中父容器可以看到子容器的信息。
+
+		新建网络：docker network create -d bridge test-net
+				-d：参数指定 Docker 网络类型，有 bridge、overlay。
+		连接容器：
+			运行一个容器并连接到新建的网络：docker run -itd --name my-web --network test-net nginx /bin/bash
+			再运行一个容器并加入到新建的网络：docker run -itd --name my-web1 --network test-net nginx /bin/bash
+			进入容器：docker exec -it my-web /bin/bash
+			证明建立了互联关系：ping my-web1
+
+	配置 DNS：
+		{
+		  "dns" : [
+			"114.114.114.114", //电信
+			"8.8.8.8" //google
+		  ]
+		}
+	
+		输出容器的 DNS 信息：docker run -it --rm  ubuntu cat etc/resolv.conf
+		在指定的容器设置 DNS：docker run -it --rm -h host_ubuntu --dns=114.114.114.114 --dns-search=test.com ubuntu
+		
+		--rm：容器退出时自动清理容器内部的文件系统。
+		-h HOSTNAME 或者 --hostname=HOSTNAME： 设定容器的主机名，它会被写到容器内的 /etc/hostname 和 /etc/hosts。
+		--dns=IP_ADDRESS： 添加 DNS 服务器到容器的 /etc/resolv.conf 中，让容器用这个服务器来解析所有不在 /etc/hosts 中的主机名。
+		--dns-search=DOMAIN： 设定容器的搜索域，当设定搜索域为 .example.com 时，在搜索一个名为 host 的主机时，DNS 不仅搜索 host，还会搜索 host.example.com。
+
+Docker 仓库管理：
+	仓库（Repository）是集中存放镜像的地方。
+
+	给准备上传到仓库的镜像打标签：docker tag ubuntu:15.10 monica/ubuntu:15.10
+	把新镜像上传到仓库：docker push monica/ubuntu:15.10
+	搜索自己仓库的镜像：docker search monica/ubuntu
+
+Docker Dockerfile：
+	Dockerfile 是一个文本文件，包含了构建 Docker 镜像的所有指令。 通过定义一系列命令和参数，Dockerfile 指导 Docker 构建一个自定义的镜像。
+	docker 的运行模式是 C/S。我们本机是 C，docker 引擎是 S。
+	实际的构建过程是在 docker 引擎下完成的，需要把本机指定目录下的文件一起打包提供给 docker 引擎使用，所以上下文路径下不要放无用的文件。
+	Dockerfile 的指令每执行一次都会在 docker 上新建一层。所以过多无意义的层，会造成镜像膨胀过大。
+
+	开始构建镜像:
+		docker build -t nginx:v3 D:\software\DataMonica(Dockerfile文件路径)
+
+	Dockerfile 指令		说明
+	FROM				指定基础镜像，用于后续的指令构建。
+	MAINTAINER			指定Dockerfile的作者/维护者。（已弃用，推荐使用LABEL指令）
+	LABEL				添加镜像的元数据，使用键值对的形式。如：LABEL version="1.0"。
+	RUN					在构建过程中在镜像中执行命令，docker build 时运行。
+	CMD					指定容器创建时的默认命令，docker run 时运行。（可以被覆盖）
+	ENTRYPOINT			设置容器创建时的主要命令。（不可被覆盖）
+	EXPOSE				声明容器运行时监听的特定网络端口。
+	ENV					在容器内部设置环境变量。
+	ADD					将文件、目录或远程URL复制到镜像中。（会自动解压）
+	COPY				将文件或目录复制到镜像中。
+	VOLUME				为容器创建挂载点或声明卷。
+	WORKDIR				设置后续指令的工作目录，通过 WORKDIR 创建的目录会一直存在。（为 RUN、CMD、ENTRYPOINT、COPY 和 ADD 设置工作目录，就是切换目录）
+	USER				指定后续指令的用户上下文。（为RUN、CMD、和 ENTRYPOINT 执行命令指定运行用户）
+	ARG					定义在构建过程中传递给构建器的变量，构建完成后的镜像不存在这些变量。可使用 "docker build" 命令设置。
+	ONBUILD				当该镜像被用作另一个构建过程的基础时，添加触发器。
+	STOPSIGNAL			设置发送给容器以退出的系统调用信号。
+	HEALTHCHECK			定义周期性检查容器健康状态的命令。
+	SHELL				覆盖Docker中默认的shell，用于RUN、CMD和ENTRYPOINT指令。
+
+	RUN：用于执行后面跟着的命令。有以下俩种格式：
+		shell 格式：
+			RUN <命令>
+			# <命令> 等同于在终端操作的 shell 命令。
+		
+		exec 格式：
+			RUN ["可执行文件", "参数1", "参数2"]
+			# 例如：RUN ["./test.php", "dev", "offline"] 等价于 RUN ./test.php dev offline
+	
+	CMD：docker run 时运行，如果存在多个 CMD 指令，仅最后一个生效。（可以被覆盖）
+	ENTRYPOINT：类似于 CMD 指令，但其不会被 docker run 的命令行参数指定的指令所覆盖。如果存在多个 CMD 指令，仅最后一个生效。（ 如果运行 docker run 时使用了 --entrypoint 选项，将覆盖 ENTRYPOINT 指令指定的程序。）
+	
+		FROM nginx
+		ENTRYPOINT ["nginx", "-c"] # 定参
+		CMD ["/etc/nginx/nginx.conf"] # 变参
+
+Docker Compose：
+	Compose 是工具，用于定义和运行多容器 Docker 应用程序。
+	通过 Compose，您可以使用 YML 文件来配置应用程序需要的所有服务。然后，使用一个命令就可以从 YML 文件配置中创建并启动所有服务。
+
+	docker compose config 可以验证 yml 文件的合法性。
+
+	Compose 使用的三个步骤：
+		使用 Dockerfile 定义应用程序的环境。
+		使用 docker-compose.yml 定义构成应用程序的服务，这样它们可以在隔离环境中一起运行。
+		最后，执行 docker-compose up 命令来启动并运行整个应用程序。
+
+	docker compose run			启动一个新容器并运行一个特定的应用程序。
+	docker compose rm			启动一个新容器并删除一个特定的应用程序。
+	docker compose ps			从 docker compose 检查 docker 容器状态。
+	docker compose build		构建 docker compose 文件。
+	docker compose up			运行 docker compose 文件。
+	docker compose ls			列出 docker compose 服务。
+	docker compose start		启动 docker compose 文件创建的容器。
+	docker compose restart		重启 docker compose 文件创建的容器。
+
+	yml 配置指令参考：
+		version： 指定本 yml 依从的 compose 哪个版本制定的
+		
+		build： 指定本地 Dockerfile 构建镜像的上下文路径 或者 路径对象
+			context：上下文路径。
+			dockerfile：指定构建镜像的 Dockerfile 文件名。
+			args：添加构建参数，这是只能在构建过程中访问的环境变量。
+			labels：设置构建镜像的标签。
+			target：多层构建，可以指定构建哪一层。
+		例如：
+			路径： build: ./dir
+			路径对象：
+				build:
+					context: ./dir
+					dockerfile: Dockerfile-alternate
+					args:
+						buildno: 1
+					labels:
+						- "com.example.description=Accounting webapp"
+						- "com.example.department=Finance"
+						- "com.example.label-with-empty-value"
+					target: prod
+		
+		cap_add/cap_drop： 添加或删除容器拥有的宿主机的内核功能（权限）
+		
+		cgroup_parent： 为容器指定父 cgroup 组，意味着将继承该组的资源限制。
+		
+		command： 覆盖容器启动的默认命令。
+		
+		container_name： 指定自定义容器名称，而不是生成的默认名称。
+		
+		depends_on： 设置依赖关系。
+			docker-compose up ：以依赖性顺序启动服务。在以下示例中，先启动 db 和 redis ，才会启动 web。
+			docker-compose up SERVICE ：自动包含 SERVICE 的依赖项。在以下示例中，docker-compose up web 还将创建并启动 db 和 redis。
+			docker-compose stop ：按依赖关系顺序停止服务。在以下示例中，web 在 db 和 redis 之前停止。
+		例如：
+			version: "3.7"
+			services:
+				web:
+					build: .
+					depends_on:
+						- db
+						- redis
+				redis:
+					image: redis
+				db:
+					image: postgres
+		
+		deploy： 指定与服务的部署和运行有关的配置。只在 swarm 模式下才会有用
+			endpoint_mode：访问集群服务的方式。
+			labels：在服务上设置标签。可以用容器上的 labels（跟 deploy 同级的配置） 覆盖 deploy 下的 labels。
+			mode：指定服务提供的模式。replicated/global：复制服务/全局服务。
+			replicas：mode 为 replicated 时，需要使用此参数配置具体运行的节点数量。
+			resources：配置服务器资源使用的限制，例如，配置 redis 集群运行需要的 cpu 的百分比 和 内存的占用。避免占用资源过高出现异常。
+			restart_policy：配置如何在退出容器时重新启动容器。
+				condition：可选 none，on-failure 或者 any（默认值：any）。
+				delay：设置多久之后重启（默认值：0）。
+				max_attempts：尝试重新启动容器的次数，超出次数，则不再尝试（默认值：一直重试）。
+				window：设置容器重启超时时间（默认值：0）
+			rollback_config：配置在更新失败的情况下应如何回滚服务。
+				parallelism：一次要回滚的容器数。如果设置为0，则所有容器将同时回滚。
+				delay：每个容器组回滚之间等待的时间（默认为0s）。
+				failure_action：如果回滚失败，该怎么办。其中一个 continue 或者 pause（默认pause）。
+				monitor：每个容器更新后，持续观察是否失败了的时间 (ns|us|ms|s|m|h)（默认为0s）。
+				max_failure_ratio：在回滚期间可以容忍的故障率（默认为0）。
+				order：回滚期间的操作顺序。其中一个 stop-first（串行回滚），或者 start-first（并行回滚）（默认 stop-first ）。
+			update_config：配置应如何更新服务，对于配置滚动更新很有用。
+				parallelism：一次更新的容器数。
+				delay：在更新一组容器之间等待的时间。
+				failure_action：如果更新失败，该怎么办。其中一个 continue，rollback 或者pause （默认：pause）。
+				monitor：每个容器更新后，持续观察是否失败了的时间 (ns|us|ms|s|m|h)（默认为0s）。
+				max_failure_ratio：在更新过程中可以容忍的故障率。
+				order：回滚期间的操作顺序。其中一个 stop-first（串行回滚），或者 start-first（并行回滚）（默认stop-first）。
+		例如：
+			version: "3.7"
+			services:
+				redis:
+					image: redis:alpine
+					deploy:
+						mode：replicated
+						replicas: 6
+						endpoint_mode: dnsrr
+						labels: 
+							description: "This redis service label"
+						resources:
+							limits:
+								cpus: '0.50'
+								memory: 50M
+							reservations:
+								cpus: '0.25'
+								memory: 20M
+						restart_policy:
+							condition: on-failure
+							delay: 5s
+							max_attempts: 3
+							window: 120s
+		
+		devices： 指定设备映射列表。
+		
+		dns： 自定义 DNS 服务器，可以是单个值或列表的多个值。
+		
+		dns_search： 自定义 DNS 搜索域。可以是单个值或列表。
+		
+		entrypoint： 覆盖容器默认的 entrypoint。
+		
+		env_file： 从文件添加环境变量。可以是单个值或列表的多个值。
+		
+		environment： 添加环境变量。您可以使用数组或字典、任何布尔值，布尔值需要用引号引起来，以确保 YML 解析器不会将其转换为 True 或 False
+		
+		expose： 暴露端口，但不映射到宿主机，只被连接的服务访问。
+		
+		extra_hosts： 添加主机名映射。类似 docker client --add-host。
+		
+		healthcheck： 用于检测 docker 服务是否健康运行。
+		
+		image： 指定容器运行的镜像。
+		
+		logging： 服务的日志记录配置。
+			driver：指定服务容器的日志记录驱动程序，默认值为json-file。有三个选项：json-file/syslog/none
+				在 json-file 驱动程序下，可以使用以下参数，限制日志得数量和大小，当达到文件限制上限，会自动删除旧的文件。
+					logging:
+						driver: json-file
+						options:
+							max-size: "200k" # 单个文件大小为200k
+							max-file: "10" # 最多10个文件
+				syslog 驱动程序下，可以使用 syslog-address 指定日志接收地址。
+					logging:
+						driver: syslog
+						options:
+							syslog-address: "tcp://192.168.0.42:123"
+		network_mode： 设置网络模式。
+		
+		networks： 配置容器连接的网络，引用顶级 networks 下的条目 。
+			aliases ：同一网络上的其他容器可以使用服务名称或此别名来连接到对应容器的服务。
+		例如：
+			services:
+				some-service:
+					networks:
+						some-network:
+							aliases:
+							 - alias1
+						other-network:
+							aliases:
+							 - alias2
+			networks:
+				some-network:
+					# Use a custom driver
+					driver: custom-driver-1
+				other-network:
+					# Use a custom driver which takes special options
+					driver: custom-driver-2
+		restart： 重启策略。
+			no：是默认的重启策略，在任何情况下都不会重启容器。
+			always：容器总是重新启动。
+			on-failure：在容器非正常退出时（退出状态非0），才会重启容器。
+			unless-stopped：在容器退出时总是重启容器，但是不考虑在 Docker 守护进程启动时就已经停止了的容器
+		
+		secrets： 存储敏感数据。
+		例如：
+			version: "3.1"
+			services:
+			mysql:
+				image: mysql
+				environment:
+					MYSQL_ROOT_PASSWORD_FILE: /run/secrets/my_secret
+				secrets:
+					- my_secret
+			secrets:
+				my_secret:
+					file: ./my_secret.txt
+		
+		security_opt： 修改容器默认的 schema 标签
+		
+		stop_grace_period： 指定在容器无法处理 SIGTERM (或者任何 stop_signal 的信号)，等待多久后发送 SIGKILL 信号关闭容器。 默认等待 10 秒。
+		
+		stop_signal： 设置停止容器的替代信号。默认情况下使用 SIGTERM 。
+		
+		sysctls： 设置容器中的内核参数，可以使用数组或字典格式。
+		
+		tmpfs： 在容器内安装一个临时文件系统。可以是单个值或列表的多个值。
+		
+		ulimits： 覆盖容器默认的 ulimit。
+		
+		volumes： 将主机的数据卷或者文件挂载到容器里。
+		例如：
+			version: "3.7"
+			services:
+				db:
+					image: postgres:latest
+					volumes:
+						- "/localhost/postgres.sock:/var/run/postgres/postgres.sock"
+						- "/localhost/data:/var/lib/postgresql/data"
+
+
+Docker Context：
+	docker context 是 Docker CLI 的一项功能，用于在多个 Docker 主机之间快速切换和管理，就像 git remote 一样的感觉。
+	它是 docker-machine 的现代替代方案，更简单、更强大，也原生支持 SSH。
+
+	docker context show: 输出当前正在使用的上下文名称
+	docker context ls: 显示所有可用的 context，包括名称、描述、是否为当前 context 等信息。
+	docker context create aliyun-ubuntutest --description "Aliyun Ubuntu VM" --docker "host=ssh://root@101.37.39.150": 创建一个新 context
+	docker context use my-remote: 之后所有 docker 命令都作用于该 remote。
+	docker context rm my-remote: 删除不再使用的 context。
+	docker context inspect my-remote: 查看该 context 的完整配置，包括 SSH 地址、描述等。
+	docker --context my-remote info: 在不切换当前 context 的前提下测试远程主机是否能连接。
+
+
+Swarm 集群管理:
+	Docker Swarm 是 Docker 的集群管理工具。它将 Docker 主机池转变为单个虚拟 Docker 主机。 
+	Docker Swarm 提供了标准的 Docker API，所有任何已经与 Docker 守护程序通信的工具都可以使用 Swarm 轻松地扩展到多个主机。
+
+	swarm 集群由管理节点（manager）和工作节点（work node）构成。
+		swarm mananger：负责整个集群的管理工作包括集群配置、服务管理等所有跟集群有关的工作。
+		work node：即图中的 available node，主要负责运行相应的服务来执行任务（task）。
+
+	创建 swarm 集群管理节点（manager）：
+		创建 docker 机器：
+			$ docker-machine create -d virtualbox swarm-manager
+		初始化 swarm 集群，进行初始化的这台机器，就是集群的管理节点： 
+			$ docker-machine ssh swarm-manager
+			$ docker swarm init --advertise-addr <MANAGER_IP> #这里的 IP 为创建机器时分配的 ip。
+		初始化成功后需要将这行复制出来，在增加工作节点时会用到：
+			docker swarm join --token SWMTKN-1-4oogo9qziq768dma0uh3j0z0m5twlm10iynvz7ixza96k6jh9p-ajkb6w7qd06y1e33yrgko64sk 192.168.99.107:2377
+	
+	创建 swarm 集群工作节点（worker）：
+		创建好俩台机器，swarm-worker1 和 swarm-worker2 ，进入两个机器里，指定添加至上一步中创建的集群，这里会用到上一步复制的内容。
+			在 swarm-manager 上执行：
+				$ docker swarm join-token worker #获取 worker join 命令
+			在每台 worker 节点上执行：
+				docker swarm join --token SWMTKN-1-4oogo9qziq768dma0uh3j0z0m5twlm10iynvz7ixza96k6jh9p-ajkb6w7qd06y1e33yrgko64sk 192.168.99.107:2377
+	
+	查看集群信息:
+		在 swarm-manager 上执行：
+			$ docker node ls
+			$ docker info
+	
+	部署服务到集群中：
+		在一个工作节点上创建一个名为 helloworld 的服务，这里是随机指派给一个工作节点：
+			$ docker service create --replicas 1 --name helloworld alpine ping docker.com
+				docker service create	创建一个新的 Swarm 服务（区别于 docker run 是普通容器）
+				--replicas 1			指定服务副本数为 1（即部署 1 个容器）
+				--name helloworld		服务名称为 helloworld
+				alpine					使用的基础镜像是 alpine（一个非常小的 Linux 镜像）
+				ping docker.com			容器启动后运行的命令，即执行 ping docker.com
+	
+	查看服务部署情况：
+		查看 helloworld 服务运行在哪个节点上：
+			$ docker service ps helloworld
+		查看 helloworld 部署的具体信息：
+			$ docker service inspect --pretty helloworld
+	
+	扩展集群服务：
+		将上述的 helloworld 服务扩展到俩个节点：
+			$ docker service scale helloworld=2
+	
+	删除服务：
+		$ docker service rm helloworld
+	
+	滚动升级服务：
+		介绍 redis 版本如何滚动升级至更高版本的实例。
+			创建一个 3.0.6 版本的 redis：
+				$ docker service create --replicas 1 --name redis --update-delay 10s redis:3.0.6
+			滚动升级 redis：
+				$ docker service update --image redis:3.0.7 redis
+	
+	停止某个节点接收新的任务：
+		查看所有的节点：
+			$ docker node ls
+		停止节点 swarm-worker1：
+			docker node update --availability drain swarm-worker1
+		重新激活节点：
+			docker node update --availability active swarm-worker1
