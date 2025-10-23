@@ -1,0 +1,22 @@
+抓包：
+	params: Query String Parameters (URL参数)
+	data: Form Data (表单数据)
+	json_data: Request Payload (JSON数据)
+
+requests：
+	session： 自动保持会话
+
+	请求参数：
+		headers
+			user-agent 请求身份是否为浏览器
+			cookie 状态保持
+			sign 可能在客户端生成
+			token 从静态 html 中获取
+			salt 可能是时间戳 + 随机数
+		cookies
+		params
+		proxies（http/https）
+		timeout
+		verify 忽略 CA 证书
+	
+	

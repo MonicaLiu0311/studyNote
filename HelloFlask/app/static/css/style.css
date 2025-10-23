@@ -1,0 +1,209 @@
+/* 基础样式 */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+}
+
+/* 导航栏容器 */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #333;
+    padding: 0 20px;
+    height: 60px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 左侧导航链接 */
+.nav-left {
+    display: flex;
+    align-items: center;
+}
+
+.nav-left a {
+    color: white;
+    margin-right: 20px;
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.nav-left a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 右侧用户信息 */
+.nav-right {
+    display: flex;
+    align-items: center;
+    margin-left: auto; /* 关键：强制靠右 */
+}
+
+/* 用户信息区域 */
+.user-info {
+    position: relative;
+    display: flex;
+    align-items: center;
+    color: white;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.user-info:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.user-info i {
+    margin-right: 8px;
+    font-size: 1.1em;
+}
+
+.user-info span {
+    font-weight: 500;
+}
+
+/* 用户下拉菜单 */
+.user-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    min-width: 150px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 4px;
+    overflow: hidden;
+    z-index: 1000;
+}
+
+.user-dropdown a {
+    display: block;
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.3s;
+}
+
+.user-dropdown a:last-child {
+    border-bottom: none;
+}
+
+.user-dropdown a:hover {
+    background-color: #f8f9fa;
+}
+
+.user-info:hover .user-dropdown {
+    display: block;
+}
+
+/* 未登录状态下的登录/注册链接 */
+.auth-links {
+    display: flex;
+    align-items: center;
+}
+
+.auth-links a {
+    color: white;
+    margin-left: 15px;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.auth-links a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 主要内容区域 */
+.content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 文章样式 */
+.post {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.post h2 {
+    margin-top: 0;
+    color: #333;
+}
+
+/* 分页 */
+.pagination {
+    margin: 30px 0;
+    text-align: center;
+}
+
+.pagination a {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 0 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.3s;
+}
+
+.pagination a:hover {
+    background-color: #f8f9fa;
+    border-color: #999;
+}
+
+/* 闪存消息 */
+.flashes {
+    list-style: none;
+    padding: 0;
+    margin: 20px auto;
+    max-width: 1200px;
+}
+
+.flashes li {
+    padding: 12px 20px;
+    margin-bottom: 10px;
+    background: #f8f9fa;
+    border-left: 4px solid #4CAF50;
+    border-radius: 4px;
+}
+
+/* 响应式设计 */
+/* @media (max-width: 768px) {
+    nav {
+        padding: 0 10px;
+        flex-direction: column;
+        height: auto;
+        min-height: 60px;
+    }
+    
+    .nav-left, .nav-right {
+        width: 100%;
+        justify-content: center;
+        margin: 5px 0;
+    }
+    
+    .user-dropdown {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .content {
+        padding: 10px;
+    }
+} */

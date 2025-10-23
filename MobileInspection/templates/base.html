@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}线缆巡检系统{% endblock %}</title>
+    <!-- 基础样式 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- 页面特定头部内容 -->
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <!-- 页面头部 -->
+        <div class="header">
+            <h1>线缆巡检系统</h1>
+        </div>
+        
+        <!-- 页面内容区域 -->
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- 页面特定脚本 -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

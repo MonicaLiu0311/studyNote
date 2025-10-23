@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Django认证系统{% endblock %}</title>
+    <style>
+        .messages {
+            list-style: none;
+            padding: 0;
+        }
+        .messages li {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .password-help {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .password-help ul {
+            margin: 5px 0 0 20px;
+        }
+        .captcha {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .captcha input {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        {% if user.is_authenticated %}
+            欢迎, {{ user.username }}! 
+            <a href="{% url 'happy:profile' %}">个人资料</a>
+            <a href="{% url 'happy:logout' %}">退出</a>
+        {% else %}
+            <a href="{% url 'happy:login' %}">登录</a>
+            <a href="{% url 'happy:register' %}">注册</a>
+        {% endif %}
+    </nav>
+    
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    
+    {% block content %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% extends "base_happy.html" %}
+
+{% block title %}注册{% endblock %}
+
+{% block content %}
+<h1>用户注册</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="password-help">
+        <p>密码必须满足以下条件：</p>
+        <ul>
+            <li>至少8个字符</li>
+            <li>至少一个大写字母</li>
+            <li>至少一个小写字母</li>
+            <li>至少一个数字</li>
+            <li>至少一个特殊字符</li>
+        </ul>
+    </div>
+    <button type="submit">注册</button>
+</form>
+<p>已有账号？<a href="{% url 'happy:login' %}">立即登录</a></p>
+{% endblock %}

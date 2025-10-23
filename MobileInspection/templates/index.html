@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="scanner-section">
+    <h2>扫描线缆二维码</h2>
+    <div id="scanner-container"></div>
+    <div id="result">准备扫描...</div>
+    <button id="start-scanner" class="btn">开始扫描</button>
+    <button id="stop-scanner" class="btn" disabled>停止扫描</button>
+    
+    <!-- 添加测试按钮 -->
+    <div style="margin-top: 20px;">
+        <h3>测试线缆</h3>
+        <button class="test-cable-btn" data-id="CBL20230001">CBL20230001</button>
+        <button class="test-cable-btn" data-id="CBL20230002">CBL20230002</button>
+        <button class="test-cable-btn" data-id="CBL20230003">CBL20230003</button>
+        <!-- 添加更多测试按钮... -->
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- 其他脚本... -->
+<script>
+    // 为测试按钮添加事件
+    document.querySelectorAll('.test-cable-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const cableId = this.getAttribute('data-id');
+            // 模拟扫描结果
+            document.getElementById('result').textContent = `模拟扫描到线缆: ${cableId}`;
+            // 跳转到线缆详情页
+            window.location.href = `/cable/${cableId}`;
+        });
+    });
+</script>
+{% endblock %}

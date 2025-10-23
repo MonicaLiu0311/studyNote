@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}线缆 {{ cable_id }} - 线缆巡检系统{% endblock %}
+
+{% block content %}
+<!-- 线缆信息区域 -->
+<div class="info-section">
+    <h2>线缆信息: {{ cable_id }}</h2>
+    
+    <!-- 基本信息显示区域 -->
+    <div id="basic-info"></div>
+    
+    <!-- 标签页导航 -->
+    <div class="tab">
+        <button class="tablinks active" onclick="openTab(event, 'process')">工艺流程</button>
+        <button class="tablinks" onclick="openTab(event, 'inspection')">检测记录</button>
+        <button class="tablinks" onclick="openTab(event, 'inventory')">库存记录</button>
+        <button class="tablinks" onclick="openTab(event, 'record')">记录巡检</button>
+    </div>
+    
+    <!-- 工艺流程标签页内容 -->
+    <div id="process" class="tabcontent" style="display: block;">
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th>工序名称</th>
+                    <th>操作时间</th>
+                    <th>操作员</th>
+                    <th>设备</th>
+                    <th>参数</th>
+                </tr>
+            </thead>
+            <tbody id="process-data"></tbody>
+        </table>
+    </div>
+    
+    <!-- 检测记录标签页内容 -->
+    <div id="inspection" class="tabcontent">
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th>检测项目</th>
+                    <th>检测时间</th>
+                    <th>检测值</th>
+                    <th>标准值</th>
+                    <th>结果</th>
+                    <th>检测员</th>
+                </tr>
+            </thead>
+            <tbody id="inspection-data"></tbody>
+        </table>
+    </div>
+    
+    <!-- 库存记录标签页内容 -->
+    <div id="inventory" class="tabcontent">
+        <table class="info-table">
+            <thead>
+                <tr>
+                    <th>操作类型</th>
+                    <th>时间</th>
+                    <th>库位</th>
+                    <th>操作员</th>
+                    <th>备注</th>
+                </tr>
+            </thead>
+            <tbody id="inventory-data"></tbody>
+        </table>
+    </div>
+    
+    <!-- 记录巡检标签页内容 -->
+    <div id="record" class="tabcontent">
+        <!-- 巡检记录表单 -->
+        <div class="form-group">
+            <label for="inspector">巡检员:</label>
+            <select id="inspector">
+                <option value="001">张三</option>
+                <option value="002">李四</option>
+                <option value="003">王五</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="result-select">巡检结果:</label>
+            <select id="result-select">
+                <option value="合格">合格</option>
+                <option value="不合格">不合格</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="notes">备注:</label>
+            <textarea id="notes" rows="3"></textarea>
+        </div>
+        <!-- 确保只有一个提交按钮 -->
+        <button id="submit-inspection" class="btn">提交巡检记录</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- 引入API调用脚本 -->
+<script src="{{ url_for('static', filename='js/api.js') }}"></script>
+
+<!-- 引入UI交互脚本 -->
+<script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+
+<script>
+    // 页面加载完成后执行
+    document.addEventListener('DOMContentLoaded', function() {
+        // 加载当前线缆的数据
+        fetchCableData('{{ cable_id }}');
+        
+        // 初始化UI交互
+        initUI();
+    });
+</script>
+{% endblock %}

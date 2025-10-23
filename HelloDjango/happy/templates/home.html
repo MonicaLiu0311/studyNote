@@ -1,0 +1,12 @@
+{% extends "base_happy.html" %}
+
+{% block title %}首页{% endblock %}
+
+{% block content %}
+<h1>欢迎来到首页</h1>
+{% if user.is_authenticated %}
+    <p>您已登录，可以访问 <a href="{% url 'happy:profile' %}">个人资料</a>。</p>
+{% else %}
+    <p>您尚未登录，请 <a href="{% url 'happy:login' %}">登录</a> 或 <a href="{% url 'happy:register' %}">注册</a>。</p>
+{% endif %}
+{% endblock %}

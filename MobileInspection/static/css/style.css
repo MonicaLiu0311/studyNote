@@ -1,0 +1,168 @@
+/* 基础样式 */
+body {
+    font-family: 'Microsoft YaHei', sans-serif; /* 使用微软雅黑字体 */
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5; /* 页面背景色 */
+}
+
+/* 容器样式 */
+.container {
+    max-width: 800px; /* 最大宽度 */
+    margin: 0 auto; /* 居中 */
+    padding: 20px; /* 内边距 */
+}
+
+/* 头部样式 */
+.header {
+    background-color: #1976d2; /* 蓝色背景 */
+    color: white; /* 白色文字 */
+    padding: 15px; /* 内边距 */
+    text-align: center; /* 居中 */
+    border-radius: 5px 5px 0 0; /* 圆角 */
+}
+
+/* 扫描区域样式 */
+.scanner-section {
+    background-color: white; /* 白色背景 */
+    padding: 20px; /* 内边距 */
+    margin-bottom: 20px; /* 底部外边距 */
+    border-radius: 0 0 5px 5px; /* 圆角 */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 阴影效果 */
+}
+
+/* 扫描容器样式 */
+#scanner-container {
+    width: 100%; /* 宽度100% */
+    height: 300px; /* 固定高度 */
+    background-color: #000; /* 黑色背景 */
+    margin-bottom: 15px; /* 底部外边距 */
+    position: relative; /* 相对定位 */
+}
+
+/* 扫描结果样式 */
+#result {
+    padding: 15px; /* 内边距 */
+    background-color: #f9f9f9; /* 浅灰色背景 */
+    border: 1px solid #ddd; /* 边框 */
+    border-radius: 4px; /* 圆角 */
+    min-height: 50px; /* 最小高度 */
+}
+
+/* 信息区域样式 */
+.info-section {
+    background-color: white; /* 白色背景 */
+    padding: 20px; /* 内边距 */
+    border-radius: 5px; /* 圆角 */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 阴影效果 */
+}
+
+/* 信息表格样式 */
+.info-table {
+    width: 100%; /* 宽度100% */
+    border-collapse: collapse; /* 边框合并 */
+}
+
+/* 表格头部样式 */
+.info-table th, .info-table td {
+    border: 1px solid #ddd; /* 边框 */
+    padding: 8px; /* 内边距 */
+    text-align: left; /* 左对齐 */
+}
+
+/* 表头样式 */
+.info-table th {
+    background-color: #f2f2f2; /* 浅灰色背景 */
+}
+
+/* 表格行交替背景色 */
+.info-table tr:nth-child(even) {
+    background-color: #f9f9f9; /* 更浅的灰色背景 */
+}
+
+/* 标签页样式 */
+.tab {
+    overflow: hidden; /* 隐藏溢出 */
+    border: 1px solid #ccc; /* 边框 */
+    background-color: #f1f1f1; /* 浅灰色背景 */
+    border-radius: 5px 5px 0 0; /* 圆角 */
+}
+
+/* 标签按钮样式 */
+.tab button {
+    background-color: inherit; /* 继承背景 */
+    float: left; /* 左浮动 */
+    border: none; /* 无边框 */
+    outline: none; /* 无轮廓 */
+    cursor: pointer; /* 手型指针 */
+    padding: 10px 16px; /* 内边距 */
+    transition: 0.3s; /* 过渡效果 */
+}
+
+/* 标签按钮悬停效果 */
+.tab button:hover {
+    background-color: #ddd; /* 浅灰色背景 */
+}
+
+/* 活动标签按钮样式 */
+.tab button.active {
+    background-color: #1976d2; /* 蓝色背景 */
+    color: white; /* 白色文字 */
+}
+
+/* 标签内容样式 */
+.tabcontent {
+    display: none; /* 默认隐藏 */
+    padding: 15px; /* 内边距 */
+    border: 1px solid #ccc; /* 边框 */
+    border-top: none; /* 无上边框 */
+    border-radius: 0 0 5px 5px; /* 圆角 */
+    background-color: white; /* 白色背景 */
+}
+
+/* 合格状态样式 */
+.status-good {
+    color: green; /* 绿色文字 */
+    font-weight: bold; /* 粗体 */
+}
+
+/* 不合格状态样式 */
+.status-bad {
+    color: red; /* 红色文字 */
+    font-weight: bold; /* 粗体 */
+}
+
+/* 表单组样式 */
+.form-group {
+    margin-bottom: 15px; /* 底部外边距 */
+}
+
+/* 表单标签样式 */
+.form-group label {
+    display: block; /* 块级显示 */
+    margin-bottom: 5px; /* 底部外边距 */
+    font-weight: bold; /* 粗体 */
+}
+
+/* 表单控件样式 */
+.form-group select, .form-group textarea {
+    width: 100%; /* 宽度100% */
+    padding: 8px; /* 内边距 */
+    border: 1px solid #ddd; /* 边框 */
+    border-radius: 4px; /* 圆角 */
+}
+
+/* 按钮样式 */
+.btn {
+    background-color: #1976d2; /* 蓝色背景 */
+    color: white; /* 白色文字 */
+    border: none; /* 无边框 */
+    padding: 10px 15px; /* 内边距 */
+    border-radius: 4px; /* 圆角 */
+    cursor: pointer; /* 手型指针 */
+}
+
+/* 按钮悬停效果 */
+.btn:hover {
+    background-color: #1565c0; /* 深蓝色背景 */
+}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <!-- 文章列表，遍历分页对象中的文章(posts.items) -->
+    <h1>Recent Posts</h1>
+    {% for post in posts.items %}
+        <div class="post">
+            <h2><a href="{{ url_for('blog.post', post_id=post.id) }}">{{ post.title }}</a></h2>
+            <p>By <a href="{{ url_for('user.profile', username=post.author.username) }}">{{ post.author.username }}</a></p>
+            <p>{{ post.body }}</p>
+            <small>{{ post.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+        </div>
+    {% endfor %}
+    
+    <!-- 分页控制，条件显示​​：只在有上一页/下一页时显示对应链接 -->
+    <!-- 这个分页系统基于 SQLAlchemy 的 paginate 方法返回的分页对象，包含以下关键属性：
+    items: list, 当前页的数据项
+    has_prev: bool, 是否有上一页
+    has_next: bool, 是否有下一页
+    prev_num: int, 上一页页码
+    next_num: int, 下一页页码
+    page: int, 当前页码
+    pages: int, 总页数
+    total: int, 总记录数 -->
+    <div class="pagination">
+        {% if posts.has_prev %}
+            <a href="{{ url_for('blog.index', page=posts.prev_num) }}">&laquo; Previous</a>
+        {% endif %}
+        {% if posts.has_next %}
+            <a href="{{ url_for('blog.index', page=posts.next_num) }}">Next &raquo;</a>
+        {% endif %}
+    </div>
+{% endblock %}

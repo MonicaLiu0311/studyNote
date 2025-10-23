@@ -1,0 +1,36 @@
+/* 登录和注册页面专用样式 */
+.auth-card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    border: none;
+}
+
+.auth-card .card-header {
+    border-radius: 8px 8px 0 0 !important;
+}
+
+.auth-form .form-control {
+    padding: 12px;
+    border-radius: 6px;
+}
+
+.auth-form .btn {
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+.auth-form .invalid-feedback {
+    color: #dc3545;
+    font-size: 0.875em;
+}
+
+.auth-link {
+    color: #0d6efd;
+    transition: color 0.2s;
+}
+
+.auth-link:hover {
+    color: #0b5ed7;
+    text-decoration: underline;
+}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load custom_filter %}
+{% load static %}
+
+{% block reserved_portion %}
+
+<p>继承模块</p>
+
+<h1>{{hello}}</h1>
+<p>Team members: {{name_list}}</p>
+<p>Leader' info： {{leader}}</p>
+<p>Leader' name： {{leader.name}}</p>
+<p>Upper name: {{name_list|second|upper}}</p>
+<p>The size of num: {{num|filesizeformat}}</p>
+
+<ol>
+{% for n in name_list %}
+    <li>{{n}}</li>
+{% endfor %}
+</ol>
+
+<img src="{% static 'images/xiamu1.jpg' %}" alt="xiamu1">
+
+{% endblock %}

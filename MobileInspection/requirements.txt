@@ -1,0 +1,5 @@
+Flask>=2.0.1
+Flask-SQLAlchemy>=2.5.1
+PyMySQL>=1.0.2
+qrcode>=7.3.1 # 二维码生成库
+python-dotenv>=0.19.0 # 环境变量管理

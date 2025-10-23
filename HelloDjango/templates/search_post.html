@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Monica 表单-Post</title>
+</head>
+<body>
+    <form action="/search_post/" method="post">
+        {% csrf_token %}
+        <input type="text" name="query" placeholder="请输入要查询的姓名">
+        <input type="submit" value="搜索">
+    </form>
+
+    {% if result %}
+        <ul>
+            {% for r in result %}
+                <li>{{r.id}} {{r.name}} {{r.age}}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>

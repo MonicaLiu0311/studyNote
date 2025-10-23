@@ -1,0 +1,14 @@
+{% extends "base_happy.html" %}
+
+{% block title %}登录{% endblock %}
+
+{% block content %}
+<h1>用户登录</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="hidden" name="next" value="{{ request.GET.next }}">
+    <button type="submit">登录</button>
+</form>
+<p>还没有账号？<a href="{% url 'happy:register' %}">立即注册</a></p>
+{% endblock %}

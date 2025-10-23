@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Create Post - Flask Demo{% endblock %}
+
+{% block content %}
+<div class="content">
+    <div class="blog-form">
+        <h2>Create New Post</h2>
+        
+        <form method="POST" action="{{ url_for('blog.create') }}">
+            <div class="form-group">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" name="title" required 
+                       placeholder="Enter post title">
+            </div>
+            
+            <div class="form-group">
+                <label for="body" class="form-label">Content</label>
+                <textarea class="form-control" id="body" name="body" required 
+                          placeholder="Write your post content here..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn-primary">Create Post</button>
+            <a href="{{ url_for('blog.index') }}" class="btn-secondary" style="margin-left: 10px;">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,808 @@
+Django 简介：
+	Django 是一个用于构建 Web 应用程序的开放源代码的高级 Python Web 框架。
+	Django 提供了一套强大的工具和约定，使得开发者能够快速构建功能齐全且易于维护的网站。
+	Django 采用了 MVT 的软件设计模式，即模型（Model），视图（View）和模板（Template）。
+	Django 提供了全栈开发所需的工具，包括数据库 ORM（Object-Relational Mapping）、模板引擎、路由系统、用户认证等，大幅减少重复代码。
+
+	Django 的哲学:
+		DRY（Don't Repeat Yourself）: 避免重复代码，提倡复用（如模板继承、模型继承）。
+		约定优于配置: 默认提供合理配置（如自动生成 Admin 界面），减少决策成本。
+		快速开发: 从原型到生产环境均可高效推进。
+
+	内置功能：
+		功能			说明
+		Admin 后台	自动生成管理界面，无需手动编写 CRUD 逻辑。
+		ORM			用Python 类操作数据库，无需写 SQL。
+		表单处理		内置表单验证，防止 CSRF 攻击。
+		用户认证		提供登录、注册、权限管理（django.contrib.auth）。
+		路由系统		URL 映射灵活，支持正则表达式。
+		缓存机制		支持 Memcached、Redis 等后端。
+
+	MVT (Model-Template-View) —— Django 的实现方式：
+			Model (模型)：与数据库交互，处理数据的创建、读取、更新、删除。
+			Template (模板)：负责页面渲染，生成最终的 HTML 内容。
+			View (视图)：Django 的 View 更偏向于控制器的角色，接收请求并决定使用哪个模板和数据。
+	流程：
+		用户访问 URL，请求被 Django 的 urls.py 映射到相应的 View。
+		View 处理业务逻辑，调用 Model 获取数据。
+		View 将数据传递给 Template。
+		Template 渲染 HTML，最终返回给用户。
+
+	Django 的适用场景
+		适合用 Django 的项目:
+			✅ 内容管理系统（CMS）（如新闻网站、博客）
+			✅ 社交平台（用户系统、动态发布）
+			✅ 电子商务网站（订单管理、支付集成）
+			✅ API 后端（结合 Django REST framework）
+		不适合的场景:
+			❌ 超高性能要求的实时系统（如高频交易平台，推荐 Go 或 Rust）
+			❌ 极度轻量级的微服务（可以考虑 Flask 或 FastAPI）
+
+	Django 优势： "开箱即用"、安全性、社区活跃。
+
+Django 项目结构：
+	HelloDjango/
+	├── manage.py
+	├── db.sqlite3
+	├── __pycache__/
+	├── HelloDjango/
+	│   └── __init__.py
+	│   └── settings.py
+	│   └── urls.py
+	│   └── asgi.py
+	│   └── wsgi.py
+
+	manage.py： 
+		Django 项目的命令行管理工具，封装了 django-admin 的功能，并自动设置 DJANGO_SETTINGS_MODULE 环境变量指向当前项目的配置。项目管理命令都通过它执行。
+	
+	db.sqlite3：
+		Django 默认使用的 SQLite 数据库文件，在首次执行 migrate 命令后自动生成。
+		开发环境适用，生产环境建议换用 PostgreSQL/MySQL。
+		文件位置由 settings.py 中的 DATABASES['default']['NAME'] 定义。
+	
+	__pycache__/： Python 解释器生成的字节码缓存目录，包含 .pyc 文件，用于加速模块加载。无需提交到版本控制（应在 .gitignore 中忽略）。
+	
+	__init__.py： 空文件，告诉 Python 该目录是一个包。
+	
+	settings.py： 核心配置文件，包含所有重要的设置：
+		- 数据库设置 (DATABASES)
+		- 静态文件路径 (STATIC_URL)
+		- 应用注册 (INSTALLED_APPS)
+		- 调试模式 (DEBUG=True/False)
+	
+	urls.py： 主路由配置文件，定义 URL 路径与视图的映射关系。
+	
+	asgi.py： ASGI 服务器配置（用于异步 Web 服务器，如 Daphne）。用于 WebSocket 或异步视图。
+	
+	wsgi.py： WSGI 服务器配置（用于传统 Web 服务器，如 Gunicorn、uWSGI）。生产环境通过此文件启动项目。
+
+	扩展目录（非自动生成，但常用）：
+		HelloWorld/
+		├── apps/               # 推荐：存放所有自定义应用
+		│   └── blog/           # 示例应用
+		├── static/             # 静态文件（CSS/JS/图片）
+		├── media/              # 用户上传文件
+		├── templates/          # 全局模板目录
+		└── requirements.txt    # 项目依赖列表
+	
+	 apps/：
+		将应用集中管理，避免散落在项目根目录。
+		需在 settings.py 中配置 Python 路径：
+			import sys
+			sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
+	
+	static/： 存放 CSS、JavaScript、图片等，通过 STATIC_URL 访问。
+
+	media/： 用户上传的文件（如头像），通过 MEDIA_URL 访问。 需配置服务器在开发时提供访问：
+		# urls.py（仅开发环境）
+		from django.conf import settings
+		from django.conf.urls.static import static
+		urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+	
+	templates 目录： 存放 HTML 模板文件，Django 使用模板语言动态生成页面。
+
+Django 应用结构：
+	在 Django 中，一个项目可以包含多个应用。使用 python manage.py startapp myapp 创建一个新应用后，会生成以下结构：
+		myapp/ # 推荐：存放所有自定义应用
+		│
+		├── migrations/
+		│   └── __init__.py
+		├── __init__.py
+		├── admin.py
+		├── apps.py
+		├── models.py
+		├── tests.py
+		└── views.py
+	
+	models.py： 定义数据模型，与数据库表对应。
+	
+	views.py： 处理业务逻辑，返回响应。
+	
+	admin.py： 配置 Django 管理后台。
+	
+	migrations/： 存储数据库迁移文件，Django 使用这些文件来跟踪模型变更并同步到数据库。
+	
+	生产环境 vs 开发环境差异：
+		文件/配置			开发环境					生产环境
+		DEBUG			True（显示错误详情）		False（隐藏错误，记录到日志）
+		数据库			SQLite（默认）			PostgreSQL/MySQL（性能优化）
+		静态文件			runserver 自动服务		使用 collectstatic 收集到 CDN
+		ALLOWED_HOSTS	空列表或 ['localhost']	必须配置域名（如 ['example.com']）
+
+Django 模板:
+	Django 的模板系统（Template System）是用于将业务逻辑（Python）与展示层（HTML）分离的核心组件，它允许开发者通过简单的标签和变量动态生成 HTML 页面。
+	
+	模板标签:
+		{% for %}： 循环遍历列表/字典
+		{% if %}： 条件判断
+		{% extends %}： 继承基模板
+		{% block %}： 定义可被子模板覆盖的内容块
+		{% include %}： 嵌入其他模板片段
+		{% url %}： 反向解析 URL（避免硬编码路径）
+		{% csrf_token %}： 生成 CSRF 令牌（用于 POST 表单）
+		{% static 'path' %}： 加载 CSS/JS/图片
+		@register.filter： 自定义过滤器，扩展模板功能
+	
+	模板过滤器： {{ 变量名 | 过滤器：可选参数 }}
+		模板过滤器可以在变量被显示前修改它，过滤器使用管道字符 | 。
+		过滤管道可以被* 套接*，既是说，一个过滤器管道的输出又可以作为下一个管道的输入： {{ my_list|first|upper }}。
+		有些过滤器有参数，过滤器的参数跟随冒号之后并且总是以双引号包含。 例如： {{ bio|truncatewords:"30" }}。
+	其他过滤器：
+		addslashes : 添加反斜杠到任何反斜杠、单引号或者双引号前面。
+		date : 格式化 date 或者 datetime 对象，实例：{{ pub_date|date:"F j, Y" }}。
+		length : 返回变量的长度。
+		default： 为变量提供一个默认值，如果 views 传的变量的布尔值是 false，则使用指定的默认值。
+		filesizeformat： 以更易读的方式显示文件的大小（即'13 KB', '4.1 MB', '102 bytes'等）。
+		truncatechars： 如果字符串包含的字符总个数多于指定的字符数量，那么会被截断掉后面的部分，截断的字符串将以 ... 结尾。
+		safe： 将字符串标记为安全，不需要转义，要保证 views.py 传过来的数据绝对安全才能用 safe，和后端 views.py 的 mark_safe 效果相同。
+		if/else 标签：
+			{% if condition %}
+				... display
+			{% endif %}
+		for 标签： 
+			{% for %} 允许我们在一个序列上迭代。
+			{% for ... reversed %} 表示反向迭代。
+		forloop： 在 {% for %} 标签里可以通过 {{forloop}} 变量获取循环序号：
+			forloop.counter: 顺序获取循环序号，从 1 开始计算
+			forloop.counter0: 顺序获取循环序号，从 0 开始计算
+			forloop.revcounter: 倒序获取循环序号，结尾序号为 1
+			forloop.revcounter0: 倒序获取循环序号，结尾序号为 0
+			forloop.first（一般配合if标签使用）: 第一条数据返回 True，其他数据返回 False
+			forloop.last（一般配合if标签使用）: 最后一条数据返回 True，其他数据返回 False
+		empty： {% empty %} 在循环为空的时候执行（即 in 后面的参数布尔值为 False ）。
+		遍历字典: 可以直接用 dic.items 方法，用变量的解包分别获取键和值。
+		注释标签： Django 注释使用 {# ... #}
+		include： {% include "nav.html" %} 标签允许在模板中包含其它的模板的内容。
+		csrf_token： 用于form表单中，作用是跨站请求伪造保护，如果不用 {% csrf_token %} 标签，在用 form 表单时，要再次跳转页面会报 403 权限错误。
+			解析：首先，向服务器发送请求，获取登录页面，此时中间件 csrf 会自动生成一个隐藏input标签，该标签里的 value 属性的值是一个随机的字符串，用户获取到登录页面的同时也获取到了这个隐藏的input标签。
+			然后，等用户需要用到form表单提交数据的时候，会携带这个 input 标签一起提交给中间件 csrf，原因是 form 表单提交数据时，会包括所有的 input 标签，中间件 csrf 接收到数据时，会判断，这个随机字符串是不是第一次它发给用户的那个，如果是，则数据提交成功，如果不是，则返回403权限错误。
+	
+	自定义标签和过滤器：
+		在应用目录下创建 templatetags 目录(与 templates 目录同级，目录名只能是 templatetags)。
+		在 templatetags 目录下创建任意 py 文件，如：my_tags.py。
+		修改 settings.py 文件的 TEMPLATES 选项配置，添加 libraries 配置。
+		利用装饰器 @register.filter 自定义过滤器（装饰器的参数最多只能有 2 个）。
+		利用装饰器 @register.simple_tag 自定义标签。
+		在使用自定义标签和过滤器前，要在 html 文件 body 的最上方中导入该 py 文件。
+	
+	配置静态文件：
+		在项目根目录下创建 statics 目录。
+		在 settings 文件的最下方配置添加以下配置：
+			STATIC_URL = '/static/' # 别名，浏览器访问静态文件的前缀
+			STATICFILES_DIRS = [ 
+				os.path.join(BASE_DIR, "statics"), 
+			]
+		在 statics 目录下创建 css 目录，js 目录，images 目录，plugins 目录， 分别放 css文件，js文件，图片，插件。
+		把 bootstrap 框架放入插件目录 plugins。
+		在 HTML 文件的 head 标签中引入 bootstrap（此时引用路径中的要用配置文件中的别名 static，而不是目录 statics）。
+			<link rel="stylesheet" href="/static/plugins/bootstrap-3.3.7/dist/css/bootstrap.css">
+	
+	模板继承：
+		模板可以用继承的方式来实现复用，减少冗余内容。
+		网页的头部和尾部内容一般都是一致的，我们就可以通过模板继承来实现复用。
+		父模板用于放置可重复利用的内容，子模板继承父模板的内容，并放置自己的内容。
+		
+		父模板： 父模板中的预留区域，该区域留给子模板填充差异性的内容，不同预留区域名字不能相同。
+			{% block 名称 %} 
+				预留给子模板的区域，可以设置设置默认内容
+			{% endblock 名称 %}
+		
+		子模板： 子模板使用标签 extends 继承父模板，子模板如果没有设置父模板预留区域的内容，则使用在父模板设置的默认内容，当然也可以都不设置，就为空。
+			{% extends "父模板路径"%} 
+
+Django 模型：
+	Django 对各种数据库提供了很好的支持，包括：PostgreSQL、MySQL、SQLite、Oracle。
+	Django 为这些数据库提供了统一的调用API。 我们可以根据自己业务需求选择不同的数据库。
+
+	Django ORM：
+		Django 模型使用自带的 ORM。
+		对象关系映射（Object Relational Mapping，简称 ORM ）用于实现面向对象编程语言里不同类型系统的数据之间的转换。
+		ORM 在业务逻辑层和数据库层之间充当了桥梁的作用。
+		ORM 是通过使用 描述对象 和 数据库 之间映射的元数据，将程序中的对象自动持久化到数据库中。
+	
+	ORM 解析过程:
+		ORM 会将 Python 代码转成为 SQL 语句。
+		SQL 语句通过 pymysql 传送到数据库服务端。
+		在数据库中执行 SQL 语句并将结果返回。
+	
+	ORM				数据库
+	Models类			数据表
+	对象实例			一条数据
+	属性				字段
+	
+	数据库配置：
+		1. 配置 MySQL 数据库：
+			安装 MySQL 数据库并配置。
+			创建数据库语法(ORM 无法操作到数据库级别，只能操作到数据表)：
+				create database 数据库名称 default charset=utf8; # 防止编码问题，指定为 utf8
+			修改项目 settings.py 文件中的 DATABASES 配置项，配置 MySQL 。
+			修改同级目录的 __init__.py ，告诉 Django 使用 pymysql 模块连接 mysql 数据库。
+		2. 定义模型：
+			创建 APP： Django 规定，如果要使用模型，必须要创建一个 app。
+				django-admin startapp my_test
+			修改 my_test/models.py 文件，定义表结构。
+			添加 settings.py 中的 INSTALLED_APPS 项，添加自定义 app。
+			创建表结构，在命令行中运行：
+				$ python3 manage.py migrate   # 创建表结构
+				$ python3 manage.py makemigrations my_test  # 让 Django 知道我们在我们的模型有一些变更
+				$ python3 manage.py migrate my_test   # 创建表结构
+
+Django 表单：
+	HTML表单是网站交互性的经典方式。
+	
+	HTTP 请求：
+		HTTP协议以"请求－回复"的方式工作。客户发送请求时，可以在请求中附加数据。服务器通过解析请求，就可以获得客户传来的数据，并根据URL来提供特定的服务。
+
+
+Django 视图：
+	一个视图函数，简称视图，是一个简单的 Python 函数，它接受 Web 请求并且返回 Web 响应。
+	视图层中有两个重要的对象：请求对象(request)与响应对象(HttpResponse)。
+	
+	HttpRequest 请求对象：
+		每个视图函数的第一个参数是一个 HttpRequest 对象： request。
+		
+		HttpRequest 对象包含当前请求 URL 的一些信息：
+			path： 请求页面的全路径,不包括域名—例如, "/hello/"。
+			method： 请求中使用的HTTP方法的字符串表示。全大写表示。例如： request.method == 'POST'
+			GET： 包含所有HTTP GET参数的类字典对象。
+			POST： 包含所有HTTP POST参数的类字典对象。
+					服务器收到空的POST请求的情况也是有可能发生的。也就是说，表单form通过HTTP POST方法提交请求，但是表单中可以没有数据。
+					因此，不能使用语句if request.POST来判断是否使用HTTP POST方法；应该使用if request.method == "POST"。
+			REQUEST： 为了方便，该属性是POST和GET属性的集合体，但是有特殊性，先查找POST属性，然后再查找GET属性。借鉴PHP's $_REQUEST。
+					例如，如果GET = {"name": "john"} 和POST = {"age": '34'},则 REQUEST["name"]="john", REQUEST["age"]="34"。
+					强烈建议使用GET and POST,因为这两个属性更加显式化，写出的代码也更易理解。
+			body： 数据类型是二进制字节流，是原生请求体里的参数内容，在 HTTP 中用于 POST，因为 GET 没有请求体。
+					在 HTTP 中不常用，而在处理非 HTTP 形式的报文时非常有用，例如：二进制图片、XML、Json 等。
+			COOKIES： 包含所有cookies的标准Python字典对象。Keys和values都是字符串。
+			FILES： 包含所有上传文件的类字典对象。 
+				FILES中的每个Key都是<input>标签中name属性的值，FILES中的每个value 同时也是一个标准Python字典对象，包含下面三个Keys:
+					filename: 上传文件名,用Python字符串表示
+					content-type: 上传文件的Content type
+					content: 上传文件的原始内容
+				注意：只有在请求方法是POST，并且请求页面中<form>有enctype="multipart/form-data"属性时FILES才拥有数据。否则，FILES 是一个空字典。
+			META： 包含所有可用HTTP头部信息的字典。 例如：
+					CONTENT_LENGTH
+					CONTENT_TYPE
+					QUERY_STRING: 未解析的原始查询字符串
+					REMOTE_ADDR: 客户端IP地址
+					REMOTE_HOST: 客户端主机名
+					SERVER_NAME: 服务器主机名
+					SERVER_PORT: 服务器端口
+				META 中这些头加上前缀 HTTP_ 为 Key, 冒号(:)后面的为 Value， 例如：
+					HTTP_ACCEPT_ENCODING
+					HTTP_ACCEPT_LANGUAGE
+					HTTP_HOST: 客户发送的HTTP主机头信息
+					HTTP_REFERER: referring页
+					HTTP_USER_AGENT: 客户端的user-agent字符串
+					HTTP_X_BENDER: X-Bender头信息
+			user： 是一个django.contrib.auth.models.User 对象，代表当前登录的用户。
+				如果访问用户当前没有登录，user将被初始化为django.contrib.auth.models.AnonymousUser的实例。
+				你可以通过user的is_authenticated()方法来辨别用户是否登录。
+				只有激活Django中的AuthenticationMiddleware时该属性才可用。
+			session： 唯一可读写的属性，代表当前会话的字典对象。只有激活Django中的session支持时该属性才可用。
+			raw_post_data： 原始HTTP POST数据，未解析过。 高级处理时会有用处。
+		
+		HttpRequest 对象也有一些有用的方法：
+			__getitem__(key)： 返回GET/POST的键值,先取POST,后取GET。如果键不存在抛出 KeyError。
+				我们可以使用字典语法访问HttpRequest对象，例如： request["foo"]等同于先request.POST["foo"] 然后 request.GET["foo"]的操作。
+			has_key()： 检查request.GET or request.POST中是否包含参数指定的Key。
+			get_full_path()： 返回包含查询字符串的请求路径。例如， "/music/bands/the_beatles/?print=true"
+			is_secure()： 如果请求是安全的，返回True，就是说，发出的是HTTPS请求。
+
+		QueryDict 对象：
+			在 HttpRequest 对象中, GET 和 POST 属性是 django.http.QueryDict 类的实例。
+			QueryDict类似字典的自定义类，用来处理单键对应多值的情况。
+			QueryDict实现所有标准的词典方法。
+			还包括一些特有的方法：
+				__getitem__()： 和标准字典的处理有一点不同，如果 Key 对应多个 Value，__getitem__() 返回最后一个 value。
+				__setitem__()： 设置参数指定 key 的 value 列表(一个Python list)。
+					注意：它只能在一个 mutable QueryDict 对象上被调用(就是通过 copy() 产生的一个 QueryDict 对象的拷贝)。
+				get()： 如果key对应多个value，get()返回最后一个value。
+				update()： 参数可以是 QueryDict，也可以是标准字典。和标准字典的 update 方法不同，该方法添加字典 items 而不是替换它们。
+				items()： 和标准字典的items()方法有一点不同，该方法使用单值逻辑的__getitem__()。
+				copy()： 返回对象的拷贝，内部实现是用Python标准库的 copy.deepcopy()。该拷贝是 mutable(可更改的) — 就是说，可以更改该拷贝的值。
+				getlist(key)： 返回和参数key对应的所有值，作为一个Python list返回。如果key不存在，则返回空list。
+				setlist(key, list_)： 设置key的值为list_。
+				appendlist(key, item)：添加item到和key关联的内部list。
+				setlistdefault(key, list)： 和 setdefault 有一点不同，它接受 list 而不是单个 value 作为参数。
+				lists()： 和 items() 有一点不同, 它会返回key的所有值，作为一个 list。
+				urlencode()： 返回一个以查询字符串格式进行格式化后的字符串（例如："a=2&b=3&b=5"）。
+	
+	HttpResponse 响应对象：
+		响应对象主要有三种形式：HttpResponse()、render()、redirect()。
+		
+		HttpResponse(): 返回文本，参数为字符串，字符串中写文本内容。如果参数为字符串里含有 html 标签，也可以渲染。
+		render(): 返回文本，第一个参数为 request，第二个参数页面名称，第三个参数为字典（可选参数，向页面传递的参数：键为页面参数名，值为views参数名）。
+		redirect()： 重定向，跳转新页面，参数为页面路径。一般用于 form 表单提交后，跳转到新页面。
+		
+		render 和 redirect 是在 HttpResponse 的基础上进行了封装：
+			render：底层返回的也是 HttpResponse 对象
+			redirect：底层继承的是 HttpResponse 对象
+
+
+Django 路由：
+	路由简单的来说就是根据用户请求的 URL 链接来判断对应的处理程序，并返回处理结果，也就是 URL 与 Django 的视图建立映射关系。
+	Django 路由在 urls.py 配置，urls.py 中的每一条配置对应相应的处理方法。
+	
+	urlpatterns = [
+		path： 用于普通路径，不需要自己手动添加正则首位限制符号，底层已经添加。
+		re_path： 用于正则路径，需要自己手动添加正则首位限制符号。
+	]
+	
+	正则路径中的分组：
+		无名分组： 按位置传参，一一对应。 正则表达式中的每个捕获组 (...)会作为单独参数传递给视图函数。
+		有名分组： 有名分组按关键字传参，与位置顺序无关： (?P<组名>正则表达式)。
+	
+	路由分发(include)：
+		Django 项目里多个app目录共用一个 urls 文件容易造成混淆，后期维护也不方便。
+		应该在项目下的总 urls 文件里统一将路径分发给各个 app 目录，然后在每个 app 目录都单独创建自己的 urls 再次映射到具体的处理程序。
+	
+	路由别名(name)：
+		路由别名是一种为 URL 模式命名的机制，它允许你在代码中通过名称引用路由，并且反向解析 URL。
+		路由别名没有作用域，在反向解析 URL 时，会在项目全局顺序搜索，当查找到第一个路由别名指定 URL 时，立即返回。
+		当在不同的 app 目录下的 urls 中定义相同的路由别名时，可能会导致 URL 反向解析错误。
+		比如：
+			path('hello/', views.hello, name='login'),
+			re_path(r"^login/(?P<year>[0-9]{4})/$", views.login, name="login")
+	
+	命名空间(Namespace)：
+		命名空间是表示标识符的可见范围。
+		一个标识符可在多个命名空间中定义，它在不同命名空间中的含义是互不相干的。
+		命名空间是解决多个应用之间 URL 名称冲突的关键机制。它通过层级化的命名方式，让不同应用中的同名 URL 模式能够共存。
+		它在 include 中，include 里面是一个元组。
+		例如：
+			path('blog/', include('blog.urls', namespace='blog'))
+			此时在各个 app 目录下重复定义 name="login" 也不会混淆。
+
+
+path(route, view, kwargs=None, name=None)
+	route： 字符串，定义 URL 的路径部分。可以包含变量，例如 <int:my_variable>，以从 URL 中捕获参数并将其传递给视图函数。
+	view： 视图函数，处理与给定路由匹配的请求。可以是一个函数或一个基于类的视图。
+	kwargs（可选）： 一个字典，包含传递给视图函数的额外关键字参数。
+	name（可选）： 为 URL 路由指定一个唯一的名称，以便在代码的其他地方引用它。这对于在模板中生成 URL 或在代码中进行重定向等操作非常有用。
+
+Django Admin 管理工具
+	Django 提供了基于 web 的管理工具。
+	Django 自动管理工具是 django.contrib 的一部分。你可以在项目的 settings.py 中的 INSTALLED_APPS 看到它。
+	django.contrib是一套庞大的功能集，它是Django基本代码的组成部分。
+	
+	激活管理工具：
+		通常我们在生成项目时会在 urls.py 中自动设置好。
+	
+	使用管理工具：
+		启动开发服务器，然后在浏览器中访问 http://127.0.0.1:8000/admin/
+		可以通过命令 python manage.py createsuperuser 来创建超级用户
+		为了让 admin 界面管理某个数据模型，我们需要先注册该数据模型到 admin.py： admin.site.register(Test)
+	
+	可以 管理复杂模型 和 自定义 admin 表单 和 内联显示(Inline)。
+	
+	django-admin 命令详解：
+		django-admin 是 Django 框架提供的一个命令行工具，它是管理 Django 项目的核心工具。
+		无论是创建新项目、运行开发服务器，还是执行数据库迁移，django-admin 都是不可或缺的工具。
+		
+		创建新项目： django-admin startproject <项目名称> [目标目录]
+		创建新应用： django-admin startapp <应用名称> [目标目录]
+		检查项目配置： django-admin check
+		数据库迁移： python manage.py migrate [应用名] [迁移版本]
+		生成数据库迁移文件： python manage.py makemigrations
+		创建超级用户： django-admin createsuperuser
+		启动开发服务器： python manage.py runserver [IP:端口]
+
+
+Django 数据表操作：
+	返回模型实例对象（Model Instance）： 可直接访问字段属性 obj.field_name。
+		对象.save()			book.save()					-				无返回值，保存当前对象
+		对象.delete()		book.delete()				tuple			返回 (删除行数, {模型: 计数})
+		objects.get()		Book.objects.get(id=1)		Book			必须存在且唯一，否则抛异常
+		objects.create()	Book.objects.create(...)	Book			创建并返回新对象
+		objects.first()		Book.objects.first()		Book或 None		结果集的第一条
+		objects.last()		Book.objects.last()			Book或 None		结果集的最后一条
+		QuerySet[索引]		Book.objects.all()[0]		Book			通过索引获取实例
+	
+	返回 QuerySet 对象： 是查询集合，需进一步处理才能获取具体数据。
+		objects.all()			Book.objects.all()						QuerySet	所有记录
+		objects.filter()		Book.filter(price__gt=100)				QuerySet	条件筛选
+		objects.exclude()		Book.exclude(title__contains="菜鸟")		QuerySet	反向筛选
+		objects.order_by()		Book.order_by('-price')					QuerySet	排序结果
+		objects.reverse()		Book.order_by('id').reverse()			QuerySet	反转已排序结果
+		objects.values()		Book.values('title', 'price')			QuerySet	返回字典序列
+		objects.values_list()	Book.values_list('title', flat=True)	QuerySet	返回元组序列
+		objects.distinct()		Book.distinct()							QuerySet	去重结果
+		QuerySet.delete()		Book.filter(...).delete()				tuple		批量删除
+		QuerySet.update()		Book.filter(...).update(price=100)		int			批量更新行数
+	
+	其他特殊返回类型：
+		objects.count()			Book.count()					int		返回记录数
+		objects.exists()		Book.filter(...).exists()		bool	判断是否存在
+		objects.aggregate()		Book.aggregate(Avg('price'))	dict	聚合计算结果
+	
+	Django 删除数据时，会模仿 SQL约束 ON DELETE CASCADE 的行为，也就是删除一个对象时也会删除与它相关联的外键对象。
+	
+	__in： 读取区间，例如： id__in=[200,300]
+	__gt： 大于，例如： id__gt=200
+	__gte： 大于等于，例如： id__gte=200
+	__lt： 小于，例如： id__lt=300
+	__lte： 小于等于，例如： id__lte=300
+	__range： 在 ... 之间，左闭右闭区间，例如： id__range=[200,300]
+	__contains: 包含，例如： name__contains="梅"
+	__icontains： 不区分大小写的包含，例如： name__icontains="python"
+	__startswith： 以指定字符开头，例如： name__startswith="梅"
+	__endswith： 以指定字符结尾，例如： name__endswith="梅"
+	__year： DateField 数据类型的年份，例如： createdate__year=2008
+	__month： DateField 数据类型的月份，例如： createdate__month=10
+	__day： DateField 数据类型的天数，例如： createdate__day=09
+	
+	关联管理器(对象调用)：
+		正向查询（Forward Query）： 从 定义关联字段的模型 出发，访问关联的模型实例。
+		适用关系类型：
+			一对一（OneToOneField）		Profile.objects.get(id=1).user			直接访问关联的User对象
+			一对多（ForeignKey）			Book.objects.get(id=1).publish			获取关联的出版社对象
+			多对多（ManyToManyField）		Book.objects.get(id=1).authors.all()	获取所有关联的作者
+			多对多关系返回的是关联管理器（RelatedManager），需调用 .all()获取查询集。
+		
+		反向查询（Reverse Query）： 从 被关联的模型 出发，访问定义关联的模型实例。
+		适用关系类型：
+			一对一（OneToOneField）		User.objects.get(id=1).profile				直接访问关联的Profile对象（无_set）
+			一对多（ForeignKey）			Publish.objects.get(id=1).book_set.all()	获取关联的出版社对象_set
+			多对多（ManyToManyField）		Author.objects.get(id=1).book_set.all()		获取所有关联的书籍对象_set
+			一对多、多对多关系返回的是关联管理器（RelatedManager），需调用 .all()获取查询集。
+		
+		通用方法（适用于所有 _set）：
+			.all()		publisher.book_set.all()	获取所有关联对象
+			.count()	author.book_set.count()		统计关联数量
+			.exists()	user.profile.exists()		检查关联是否存在
+
+		多对多专属方法：
+			.add()		book.authors.add(author1)				添加关联
+			.remove()	book.authors.remove(author1)			移除关联
+			.clear()	book.authors.clear()					清空所有关联
+			.set()		book.authors.set([author1, author2])	重置关联列表
+
+		
+	基于对象的跨表查询：
+		正向查询		从 定义关联字段的模型 出发		模型实例.关联字段名
+		反向查询		从 被关联的模型 出发			模型实例.被关联模型名小写_set
+		一对一（OneToOneField）：
+			一个模型实例 唯一关联 另一个模型实例。
+			数据库层面：外键 + UNIQUE约束。
+			示例：用户（User）和用户资料（Profile，OneToOneField 定义在此表中）。
+			正向查询		profile.user.username	通过 Profile 查 User
+			反向查询		user.profile.phone		通过 User 查 Profile
+		
+		一对多（ForeignKey）：
+			一个模型实例 关联多个 另一个模型的实例。
+			数据库层面：外键字段。
+			示例：出版社（Publish）和书籍（Book，ForeignKey 定义在此表中）。
+			正向查询		book.publish.name			通过 Book 查 Publish
+			反向查询		publish.book_set.all()		通过 Publish 查所有 Book
+		
+		 多对多（ManyToManyField）：
+			双向多对多关系，通过 中间表 实现
+			示例：书籍（Book，ManyToManyField 定义在此表中）和作者（Author）。
+			正向查询		book.authors.all()			通过 Book 查所有 Author
+			反向查询		author.book_set.all()		通过 Author 查所有 Book
+		
+	基于双下划线的跨表查询： 主表.objects.filter(从表模型名小写__字段__查询条件)
+		一对一关系（OneToOneField）：
+			示例：用户（User）和用户资料（Profile，OneToOneField 定义在此表中）。
+			正向查询		查询手机号包含"123"的用户	User.objects.filter(profile__phone__contains="123")
+			反向查询		查询名为"张三"的用户资料	Profile.objects.filter(user__name="张三")
+			组合查询		同时过滤用户和资料字段		User.objects.filter(name__startswith="张", profile__phone__startswith="138")
+		
+		一对多关系（ForeignKey）：
+			示例：出版社（Publish）和书籍（Book，ForeignKey 定义在此表中）。
+			正向查询		Book.objects.filter(publish__name="清华出版社")					查询"清华出版社"的所有书籍
+			反向查询		Publish.objects.filter(book__title__contains="Python")			查询出版过"Python"书籍的出版社
+			反向+聚合		Publish.objects.filter(book__price__gt=100).values('name')		查询价格>100的出版社名称
+		
+		多对多关系（ManyToManyField）：
+			示例：书籍（Book，ManyToManyField 定义在此表中）和作者（Author）。
+			正向查询		Book.objects.filter(authors__name="令狐冲")									查询"令狐冲"写的所有书籍
+			反向查询		Author.objects.filter(book__title__contains="Python")						查询写过"Python"书籍的作者
+			多条件查询	Author.objects.filter(book__title="Python").filter(book__title="Django")	查询同时写过"Python"和"Django"书籍的作者
+		
+	聚合查询（aggregate）：
+		Django 使用聚合查询前要先从 django.db.models 引入 Avg、Max、Min、Count、Sum 。
+		聚合函数 aggregate() 是 QuerySet 的一个终止子句， 生成的一个汇总值，相当于 count()。
+		使用 aggregate() 后，返回的数据类型就变为字典，不能再使用 QuerySet 数据类型的一些 API 了。
+		返回的字典中：键的名称默认是（属性名称加上__聚合函数名），值是计算出来的聚合值。
+		如果要自定义返回字典的键的名称，可以起别名： aggregate(别名 = 聚合函数名("属性名称"))
+		
+	分组查询（annotate）：
+		分组查询一般会用到聚合函数，所以使用前要先从 django.db.models 引入 Avg,Max,Min,Count,Sum 。
+		返回值：
+			分组后，用 values 取值，则返回值是 QuerySet 数据类型里面为一个个字典；
+			分组后，用 values_list 取值，则返回值是 QuerySet 数据类型里面为一个个元组。
+		
+		values/values_list 放在 annotate 前面： values/values_list 是声明以什么字段分组，annotate 执行分组。
+		values/values_list 放在 annotate 后面： annotate 表示直接以当前表的pk执行分组，values/values_list 表示查询哪些字段， annotate 里的聚合函数需要起别名，在 values/values_list 里写其别名。
+		
+	F() 查询： F("字段名称")
+		使用前要先从 django.db.models 引入 F 。
+		F() 的实例可以在查询中引用字段，来比较同一个 model 实例中两个不同字段的值。
+		F() 动态获取对象字段的值，可以进行运算。 Django 支持 F()对象之间 以及 F()对象和常数之间 的加减乘除和取余的操作。
+		修改操作（update）也可以使用 F() 函数。
+	
+	Q() 查询： Q(条件判断)
+		使用前要先从 django.db.models 引入 Q 。
+		Q 对象可以使用 & | ~ （与 或 非）操作符进行组合。
+		可以混合使用 Q 对象和关键字参数，Q 对象和关键字参数是用 "and" 拼在一起的（即将逗号看成 and ），但是 Q 对象必须位于所有关键字参数的前面。
+
+
+Django Form 组件：
+	Django Form 组件用于对页面进行初始化，生成 HTML 标签，此外还可以对用户提交的数据进行校验（显示错误信息）。
+	使用 Form 组件，需要先导入 forms。
+	
+	报错信息显示顺序：
+		先显示字段属性中的错误信息，然后再显示局部钩子的错误信息。
+		若显示了字段属性的错误信息，就不会显示局部钩子的错误信息。
+		若有全局钩子，则全局钩子是等所有的数据都校验完，才开始进行校验，并且全局钩子的错误信息一定会显示。
+	
+	form.cleaned_data： 
+		Django 表单处理中的一个重要属性，它包含 已通过验证并清洗后的数据，格式为 Python 字典。
+		表单字段的值会被自动转换为对应的 Python 类型（如 CharField→ str，IntegerField→ int）。
+		直接使用 cleaned_data可以避免未验证的原始数据（request.POST）可能引发的安全问题。
+	
+	局部钩子和全局钩子：
+		在 Django 表单中，局部钩子（单个字段验证）和全局钩子（跨字段验证）是自定义验证逻辑的两种重要方式。它们通过覆写表单类的方法实现，确保数据符合业务规则。
+		
+		局部钩子（单字段验证）：
+			作用：针对某个特定字段进行额外验证。
+			命名规则：方法名为 clean_<field_name>()，返回验证后的字段值。
+			触发时机：在表单的默认字段验证（如 required、max_length）之后执行。
+			例如： 
+				age = self.cleaned_data.get("age")  # 获取已清洗的字段值
+				if age < 18:
+					raise ValidationError("年龄必须 ≥ 18 岁！")
+				return age  # 必须返回该字段的值
+		
+		全局钩子（跨字段验证）：
+			作用：验证多个字段之间的关系或执行全局逻辑。
+			命名规则：覆写 clean()方法，返回完整的 cleaned_data。
+			触发时机：在所有局部钩子执行完毕后调用。
+			例如： 
+				cleaned_data = super().clean()  # 先获取所有已清洗的数据
+				age = cleaned_data.get("age")
+				salary = cleaned_data.get("salary")
+				if age < 25 and salary > 10000:
+					raise ValidationError("25 岁以下员工工资不能超过 1 万！")
+				return cleaned_data  # 必须返回 cleaned_data
+
+
+Django Auth 组件：
+	Django Auth 组件一般用在用户的登录注册上，用于判断当前的用户是否合法，并跳转到登陆成功或失败页面。
+	Django Auth 组件需要导入 auth 模块，返回值是用户对象。
+
+	创建用户对象的三种方法：
+		create()：创建一个普通用户，密码是明文的。
+		create_user()：创建一个普通用户，密码是密文的。
+		create_superuser()：创建一个超级用户，密码是密文的，要多传一个邮箱 email 参数。
+	
+	from django.contrib.auth.models import User
+	authenticate(username, password)： 验证用户的用户名和密码，从需要 auth_user 表中过滤出用户对象。
+	
+	from django.contrib import auth
+	login()： 登录，给验证成功的用户加 session，将 request.user 赋值为用户对象。
+	logout(request)： 注销用户，需要清空 session 信息，将 request.user 赋值为匿名用户。
+	
+	from django.contrib.auth.decorators import login_required
+	@login_required： 设置装饰器，给需要登录成功后才能访问的页面统一加装饰器。
+
+
+Django cookie 与 session：
+	Cookie 是存储在客户端计算机上的文本文件，并保留了各种跟踪信息。
+
+	识别返回用户包括三个步骤：
+		服务器脚本向浏览器发送一组 Cookie。例如：姓名、年龄或识别号码等。
+		浏览器将这些信息存储在本地计算机上，以备将来使用。
+		当下一次浏览器向 Web 服务器发送任何请求时，浏览器会把这些 Cookie 信息发送到服务器，服务器将使用这些信息来识别用户。
+	
+	在Web开发中，使用 session 来完成会话跟踪，session 底层依赖 Cookie 技术。
+	
+	HTTP 是一种"无状态"协议，这意味着每次客户端检索网页时，客户端打开一个单独的连接到 Web 服务器，服务器会自动不保留之前客户端请求的任何记录。
+	
+	有以下三种方式来维持 Web 客户端和 Web 服务器之间的 session 会话：
+		Cookies： 保存在客户端浏览器中的键值对。
+			一个 Web 服务器可以分配一个唯一的 session 会话 ID 作为每个 Web 客户端的 cookie，对于客户端的后续请求可以使用接收到的 cookie 来识别。
+			
+			工作流程：
+				服务器在 HTTP 响应头中设置 Set-Cookie。
+				浏览器保存 Cookie，并在后续请求中自动通过 Cookie 请求头发送给服务器。
+			
+			纯客户端技术：数据存储在浏览器，每次请求自动携带。
+			大小限制：单个 Cookie 通常不超过 4KB，每个域名下 Cookie 数量有限。
+			安全性：可设置 HttpOnly（防 XSS）、Secure（仅 HTTPS）、SameSite（防 CSRF）。
+			生命周期：通过 Expires或 Max-Age控制过期时间。
+			
+			设置 cookie:
+				rep.set_cookie(key, value,...) 
+				rep.set_signed_cookie(key ,value, salt='加密盐', ...)
+			获取 cookie:
+				request.COOKIES.get(key)
+			删除 cookie:
+				rep = HttpResponse || render || redirect 
+				rep.delete_cookie(key)
+		
+		Session： 保存在服务器端（数据库/缓存） + 客户端保存 Session ID（通过 Cookie 或 URL 传递）。
+			Session 是服务端为每个用户分配的“私人保险箱”，通过 Session ID 开锁，实现跨请求的数据共享。
+			
+			工作流程：
+				当用户访问网站时服务器创建 Session 并生成唯一 ID。
+				通过 Cookie 或 URL 将 Session ID 发送给客户端。
+				客户端后续请求携带 Session ID，服务器据此读取会话数据。
+			
+			服务器创建 Session 时：
+				客户端（浏览器）：通过 cookie["sessionid"] 保存 Session ID。
+				服务器端（数据库）：通过 django_session 表保存浏览器信息，有三个字段。
+					session_key：存的是随机字符串，即响应给浏览器 cookie["sessionid"]。
+					session_data：存的是用户的信息，即多个 request.session["key"]=value，且是密文。
+					expire_date：存的是该条记录的过期时间（默认14天）
+			
+			安全性高：敏感数据存储在服务器，客户端仅持有 ID。
+			可扩展性：适合分布式系统（如 Redis 存储 Session）。
+			依赖 Cookie/URL：默认使用 Cookie 传递 Session ID（若禁用 Cookie 需 URL 重写）。
+			
+			cookie 弥补了 http 无状态的不足，让服务器知道来的人是"谁"，但是 cookie 以文本的形式保存在浏览器端，安全性较差，且最大只支持 4096 字节。
+			所以只通过 cookie 识别不同的用户，然后在对应的 session 里保存私密的信息以及超过 4096 字节的文本。
+			
+			session 设置： request.session["key"] = value
+				a. 生成随机字符串
+				b. 把随机字符串和设置的键值对保存到 django_session 表的 session_key 和 session_data 里
+				c. 设置 cookie：set_cookie("sessionid", 随机字符串) 响应给浏览器
+			session 获取： request.session.get('key')
+				a. 从 cookie 中获取 sessionid 键的值，即随机字符串。
+				b. 根据随机字符串从 django_session 表过滤出记录。
+				c. 取出 session_data 字段的数据。
+			session 删除： 
+				删除 django_session 整条记录： request.session.flush()
+				删除 session_data 里的其中一组键值对： del request.session["key"]
+		
+		创建应用和模型： 自定义服务器端会话，通过数据库模型手动管理会话数据。
+			工作流程：
+				创建数据库表存储用户会话信息（如 SessionToken模型）。
+				客户端登录后，服务器生成令牌（Token）并返回（通过 Cookie/HTTP 头）。
+				客户端后续请求携带令牌，服务器查询数据库验证有效性。
+			
+			完全控制：可自定义会话逻辑（如多设备管理、令牌过期策略）。
+			复杂度高：需自行处理令牌生成、加密、刷新等问题。
+			无 Cookie 依赖：适合 API 或移动端（通过 Authorization头传递令牌）。
+
+
+Django 中间件：
+	Django 中间件是修改 Django request 或者 response 对象的钩子，可以理解为是介于 HttpRequest 与 HttpResponse 处理之间的一道处理过程。
+	中间件配置在 settings.py 文件的 MIDDLEWARE 选项列表中。 
+	MIDDLEWARE 配置中的每个字符串选项都是一个类，也就是一个中间件。
+	
+	钩子： 自定义的逻辑 或者 预定义的函数。
+		像 挂钩子（Hook）一样 "挂住" 流程的特定节点
+		你可以在这些节点 "挂上" 自己的逻辑，不修改 Django 源码就能扩展功能
+	
+	Django 中间件作用：
+		修改请求，即传送到 view 中的 HttpRequest 对象。
+		修改响应，即 view 返回的 HttpResponse 对象。
+	
+	自定义中间件涉及四个方法：
+		process_request(self, request)
+			作用： 在请求到达视图之前执行，可拦截或修改请求
+			典型用途： 权限校验、请求日志、IP 黑名单
+			执行时机： 请求 → 路由匹配前
+			返回值： None/HttpResponse
+				None： 继续执行后续中间件
+				HttpResponse： 直接返回响应（中断后续处理）
+		
+		process_view(self, request, view_func, view_args, view_kwargs)
+			作用： 在路由匹配到视图后、执行视图前调用
+			典型用途： 动态修改视图参数、接口耗时统计
+			执行时机： 路由匹配后 → 视图执行前
+			参数：
+				view_func： 即将调用的视图函数
+				view_args/kwargs： 视图的位置参数和关键字参数，都不包含第一个视图参数 request 
+			返回值：
+				None (默认)： 继续执行后续中间件
+				HttpResponse： 直接返回响应，跳过后续中间件和视图，拦截请求（如权限拒绝）
+				view_func(request)： 立即执行视图函数，跳过后续的 process_view，然后倒序执行所有的 process_response（不包括 process_exception，除非视图抛出异常）
+		
+		process_exception(self, request, exception)
+			作用： 当视图抛出异常时触发
+			典型用途： 统一错误处理、异常日志
+			执行时机： 视图抛出异常 → 响应返回前
+			返回值：
+				None： 交给其他中间件处理（页面会报 500 状态码错误，视图函数不执行，按照 settings 的注册倒序执行 process_exception 和 process_response）
+				HttpResponse： 自定义错误页面（页面不会报错，返回状态码为 200，视图函数不执行，后续的 process_exception 也不执行，直接从最后一个 process_response 开始倒序执行）
+				视图函数： 立即执行视图函数
+					如果新视图函数再次抛出异常： 无论返回值是什么，页面都会报错，后续的 process_exception 不会执行，直接倒序执行所有的 process_response
+					如果新视图函数正常返回： 直接从最后一个开始倒序执行 process_response
+		
+		process_response(self, request, response)
+			作用：在响应返回给客户端前修改响应
+			典型用途：添加响应头、压缩内容、统一格式化
+			执行时机：视图返回响应 → 客户端接收前
+			注意：必须返回 HttpResponse 对象
+	
+	自定义中间件的步骤：
+		在 app 目录下新建一个自定义文件 monicamiddle.py，并在该文件中导入 MiddlewareMixin。
+		自定义的中间件类，要继承父类 MiddlewareMixin。
+		在 settings.py 中的 MIDDLEWARE 里注册自定义的中间件类。
+	
+	Django 默认的中间件：
+		SecurityMiddleware： 增强网站安全性，提供 HTTP 安全相关的头部设置。
+			强制 HTTPS 重定向（需配置 SECURE_SSL_REDIRECT = True）。
+			设置安全头部：
+				Strict-Transport-Security（HSTS，强制 HTTPS 连接）。
+				X-Content-Type-Options: nosniff（禁止浏览器猜测 MIME 类型）。
+				X-XSS-Protection（防止 XSS 攻击）。
+			限制敏感操作（如密码修改）仅允许通过 HTTPS。
+		
+		SessionMiddleware： 管理会话（Session）功能。
+			为每个请求添加 request.session对象，用于存储用户会话数据。
+			通过 Cookie 传递 sessionid，关联服务器端存储的 Session 数据（默认存储在数据库的 django_session表）。
+			支持 Session 的创建、读取、更新和删除。
+		
+		CommonMiddleware： 处理通用 HTTP 请求/响应逻辑。
+			自动处理 URL 规范化（如末尾加斜杠 /，需配置 APPEND_SLASH = True）。
+			访问 /path → 自动重定向到 /path/（如果存在对应的 URL 模式）。
+			禁止访问某些用户代理（如恶意爬虫，通过 DISALLOWED_USER_AGENTS配置）。
+			设置 Cache-Control头部（如 max-age）。
+		
+		CsrfViewMiddleware： 防止跨站请求伪造（CSRF）攻击。
+			为所有 POST 表单自动添加 CSRF Token（通过 {% csrf_token %}模板标签）。
+			验证请求中的 csrfmiddlewaretoken 是否匹配服务器存储的值。
+			豁免某些视图（通过 @csrf_exempt 装饰器）。
+		
+		AuthenticationMiddleware： 处理用户认证，为请求添加 request.user对象。
+			如果用户已登录，request.user 是 User 模型实例。
+			如果用户未登录，request.user 是 AnonymousUser 实例。
+			依赖 SessionMiddleware（通过 Session 获取用户 ID）。
+		
+		MessageMiddleware： 管理一次性消息（如操作成功提示）。
+			提供 django.contrib.messages 框架，支持消息队列。
+			消息存储在 Cookie 或 Session 中，可通过模板渲染
+		
+		XFrameOptionsMiddleware： 防止点击劫持（Clickjacking）攻击。
+			设置 X-Frame-OptionsHTTP 头部，控制页面能否被嵌入 <frame> 或 <iframe>。
+			默认值 DENY：禁止任何嵌入。
+			可配置 SAMEORIGIN（仅允许同域名嵌入）。
+	
+	Django 中间件的执行顺序遵循 “先进后出” 的栈结构：
+		请求阶段（从上到下）： SecurityMiddleware → SessionMiddleware → ... → XFrameOptionsMiddleware
+		视图处理：执行视图函数。
+		响应阶段（从下到上）： XFrameOptionsMiddleware → ... → SecurityMiddleware
+
+
+Django 视图 - FBV 与 CBV:
+	FBV（function base views） 基于函数的视图，就是在视图里使用函数处理请求。
+	CBV（class base views） 基于类的视图，就是在视图里使用类处理请求。
+	
+	CBV：
+		定义的类要继承父类 View。
+		执行对应请求的方法前会优先执行 dispatch 方法(在 get/post/put...方法前执行)，dispatch() 方法会根据请求的不同调用相应的方法来处理。
+		通过父类 View 提供的一个静态方法 as_view() ，as_view 方法是基于类的外部接口， 他返回一个视图函数，调用后请求会传递给 dispatch 方法，dispatch 方法再根据不同请求来处理不同的方法。
+
+
+Django Nginx+uwsgi 安装配置：
+	测试环境中使用 python manage.py runserver 来运行服务器。
+	正式发布的服务需要一个稳定而持续的服务器，比如 apache, Nginx, lighttpd 等。
+	
+	Nginx： 接待经理 - 对外接待，分配任务（负载均衡）、分发餐具（CSS/JS/图片）、安全检查（安全防护）、外卖打包（Gzip压缩）
+	uWSGI：后厨主管 - 对内管理，分配任务（多进程/多线程处理请求）、质量控制（错误处理/进程监控）、资源管理（内存管理/连接池）、沟通协调（WSGI 协议转换）
+	Django： 厨师 - 业务核心，专心"炒菜"（处理业务逻辑）

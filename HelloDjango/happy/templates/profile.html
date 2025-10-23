@@ -1,0 +1,11 @@
+{% extends "base_happy.html" %}
+
+{% block title %}个人资料{% endblock %}
+
+{% block content %}
+<h1>个人资料</h1>
+<p>用户名: {{ user.username }}</p>
+<p>邮箱: {{ user.email|default:"未设置" }}</p>
+<p>最后登录时间: {{ user.last_login }}</p>
+<p>注册日期: {{ user.date_joined }}</p>
+{% endblock %}
