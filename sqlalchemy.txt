@@ -1,0 +1,250 @@
+SQLALchemy 是 Python 写的 ORM（对象关系映射）框架。
+
+	DDL: 数据库定义语言
+	DQL: 数据库查询语言
+	DML: 数据库操作语言
+	DCL: 数据库控制语言
+	
+	from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, ForeignKey
+	from sqlalchemy.orm import sessionmaker, relationship
+	from sqlalchemy.ext.declarative import declarative_base
+		
+	create_engine: 创建数据库连接引擎，建立和维护数据库连接，支持连接池
+	MetaData: 元数据容器，存储数据库表结构信息，用于表创建和反射，它充当了数据库结构的中央注册表。
+	Table: 数据表定义类，定义数据库表结构
+	Column: 列定义类，定义表中的字段和约束
+	Integer, String ...: 数据类型，定义字段的数据类型
+	declarative_base: 声明式基类，创建数据模型类
+	sessionmaker: 会话工厂，创建数据库会话
+	relationship: 定义表之间的关联关系
+	ForeignKey: 定义外键约束
+	
+创建数据库引擎：
+	engine = create_engine('sqlite:///example.db', echo=True) # 创建引擎
+建立连接：
+	conn = engine.connention() # 建立连接，建议用 with engine.connention as conn
+查询：
+	result = conn.execute('select...') # 执行 SQL 语句，返回 cursorresult 对象
+	row = result.fetchone() # 获取下一行，返回 Row 对象
+	row_list = result.fetchall() # 获取所有行，返回 Row List 对象
+	row_mapping = result.mappings() # 转为 Row mapping 格式，可迭代
+	key_list = result.keys() # 获取列名，返回 List
+	Row 对象可以像字典一样访问：row['id'], row[0],row.__mapping 转为真正的字典
+将查询结果转为字典：
+	dict_list = [dict(row) for row in result.mappings()]
+再转为 json ：
+	json_list = json.dumps(dict_list, ensure_ascii=False)
+
+创建元数据容器：
+	meta = MetaData()
+读取所有表：
+	meta.reflect(bind=engine) # 映射所有表，就是从现有数据库读取表结构
+	meta.reflect(bind=engine, only=[name]) # 映射特定表
+	meta.tables 是有序字典（OrderedDict），它存储了所有通过 MetaData 实例定义的表对象，键是表名，值是对应的 Table对象。
+	for table_name, table_obj in meta.tables.items() # 迭代查看表结构
+定义 users 和 posts 表：
+	users_table = Table(
+		'users',  # 表名
+		metadata,  # 关联的 MetaData 实例
+		
+		# 列定义
+		Column('id', Integer, primary_key=True, autoincrement=True),
+		Column('username', String(50), unique=True, nullable=False),
+		Column('email', String(100), unique=True, nullable=False),
+	)
+	posts_table = Table(
+		'posts', meta,
+		Column('id', Integer, primary_key=True),
+		Column('title', String(200), nullable=False),
+		Column('content', Text, nullable=False),
+		Column('user_id', Integer, ForeignKey('users.id'), nullable=False),  # 外键
+		Column('status', String(20), default='draft')
+	)
+修改 users 表添加外键：
+	users_table.append_column(
+		Column('color_id', Integer, ForeignKey('users.id'), nullable=False)
+	)
+创建索引：
+	Index('idx_users_username', users_table.c.username)
+	Index('idx_users_email', users_table.c.email)
+创建复合索引：
+	Index('idx_posts_user_status', posts_table.c.user_id, posts_table.c.status)
+创建所有表：
+	meta.create_all(engine)
+	meta.create_all(engine, meta.tables[name]) # 创建特定表
+创建所有表：
+	meta.drop_all(engine)
+	meta.tables[name].drop(engine, checkfirst=True) # 删除特定表
+更新数据：
+	conn.execute('update...') 或者 user_table.update().where( == ).valus( == )
+	conn.commit() # 提交
+插入数据：
+	conn.execute('insert...') 或者 user_table.insert().values( == )
+	conn.commit() # 提交
+删除数据：
+	conn.execute('delete...') 或者 user_table.delete().where( == )
+	conn.commit() # 提交
+关联查询：
+	conn.execute('select...join...')
+	或者
+	join_condition = posts_table.join(users_table, posts_table.c.user_id == users_table.c.id) # 创建连接
+	query = sqlalchemy.select(join_condition).where( == ) # 关联查询，从连接中选择所有列
+	query = sqlalchemy.select(users_table.c.name, posts_table.c.title).select_from(join_condition).where( == ) # 从连接中选择特定列
+
+declarative_base().metadata 元数据容器：
+	base = declarative_base()
+	Session = sessionmaker(bind=engine)
+	
+	定义表模型的三种方式：
+		# 传统方式定义模型
+		class Person(base):
+			__tablename__ = 'persons'
+			id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+			name = sqlalchemy.Column(sqlalchemy.String(50), nullable=False)
+			birthday = sqlalchemy.Column(sqlalchemy.Date, nullable=False)
+			address = sqlalchemy.Column(sqlalchemy.String(200))
+
+		# 利用 Mapped 类型注解的方式定义模型，Mapped 中的类型映射的是数据库字段类型
+		class Customer(base):
+			__tablename__ = 'customers'
+			id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+			name: Mapped[str] = mapped_column(sqlalchemy.String(100), unique=True, nullable=False)
+			birthday: Mapped[datetime.date] = mapped_column(nullable=False)
+
+		# 也可以使用 Annotated 方式定义模型
+		id_type = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
+		name_type = Annotated[str, mapped_column(sqlalchemy.String(100), unique=True, nullable=False)]
+		date_type = Annotated[datetime.date, mapped_column(nullable=False)]
+		# datetime_now_type = Annotated[datetime.date, mapped_column(nullable=False, server_default=func.now())]
+		class Supplier(base):
+			__tablename__ = 'suppliers'
+			id: Mapped[id_type]
+			name: Mapped[name_type]
+			birthday: Mapped[date_type]
+			# created_time: Mapped[datetime_now_type]
+	
+	创建表：
+		base.metadata.create_all(engine)
+	新增数据：
+		p = Person(name='Alice', birthday='1990-01-01', address='123 Main St')
+		p_list = [
+			Person(name='Bob', birthday='1985-05-12', address='456 Oak Ave'),
+			Person(name='Charlie', birthday='1992-08-23', address='789 Pine Rd')
+		]
+		session.add(p) # 新增单条记录
+		session.add_all(p_list) # 新增多条记录
+		session.commit()
+	查询数据：
+		all = session.query(Person).all()  # 查询所有记录
+		first = session.query(Person).filter(Person.name == 'Alice').first()  # 查询第一条记录，找不到返回 None
+		one = session.query(Person).filter(Person.id == 1).one()  # 查询唯一一条记录，否则抛出异常
+		sca = session.query(Person.name).filter(Person.id == 1).scalar()  # 查询单个值，取第一条记录的第一个字段，否则抛出异常
+		session.commit()
+	更新数据：
+		session.query(Person).filter(Person.id == 2).update({Person.birthday: '1985-01-01', Person.name: 'Bob Updated'})
+		session.commit()
+
+ORM 一对多 多对多：
+	Author 和 AuthorProfile 一对一
+	Publisher 和 Book 一对多
+	Author 和 Book 多对多
+	
+	定义表模型：
+		# 多对多关联表
+		book_authors = sqlalchemy.Table(
+			'book_authors', base.metadata,
+			sqlalchemy.Column('book_id', sqlalchemy.Integer, sqlalchemy.ForeignKey('books.id'), primary_key=True),
+			sqlalchemy.Column('author_id', sqlalchemy.Integer, sqlalchemy.ForeignKey('authors.id'), primary_key=True)
+		)
+
+		class Author(base):
+			__tablename__ = 'authors'
+			id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+			name = sqlalchemy.Column(sqlalchemy.String(100), unique=True, nullable=False)
+
+			# Author 和 Book 多对多
+			books: Mapped[list['Book']] = sqlalchemy.orm.relationship(secondary='book_authors', back_populates='authors')
+			# Author 和 AuthorProfile 一对一
+			profile: Mapped['AuthorProfile'] = sqlalchemy.orm.relationship(back_populates='author', uselist=False, cascade='all, delete-orphan')
+
+			def __repr__(self):
+				return f"<Author(id={self.id}, name='{self.name}')>"
+			
+		class AuthorProfile(base):
+			__tablename__ = 'author_profiles'
+			id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+			
+			# 一对一：外键设置在个人信息表
+			author_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('authors.id'), unique=True, nullable=False)
+			# AuthorProfile 和 Author 一对一
+			author: Mapped['Author'] = sqlalchemy.orm.relationship(back_populates='profile')
+			
+			# 个人信息字段
+			email = sqlalchemy.Column(sqlalchemy.String(100))
+			phone = sqlalchemy.Column(sqlalchemy.String(20))
+			address = sqlalchemy.Column(sqlalchemy.String(200))
+			birth_date = sqlalchemy.Column(sqlalchemy.Date)
+
+			def __repr__(self):
+				return f"<AuthorProfile(id={self.id}, author_id={self.author_id}, email='{self.email}', phone='{self.phone}', address='{self.address}', birth_date={self.birth_date})>"
+
+		class Publisher(base):
+			__tablename__ = 'publishers'
+			id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+			name = sqlalchemy.Column(sqlalchemy.String(100), unique=True, nullable=False)
+
+			# Publisher 和 Book 一对多
+			books: Mapped[list['Book']] = sqlalchemy.orm.relationship(back_populates='publisher', cascade='all, delete-orphan')
+
+			def __repr__(self):
+				return f"<Publisher(id={self.id}, name='{self.name}')>"
+
+		class Book(base):
+			__tablename__ = 'books'
+			id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
+			title = sqlalchemy.Column(sqlalchemy.String(200), nullable=False)
+			pulished_date = sqlalchemy.Column(sqlalchemy.Date)
+
+			pulisher_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('publishers.id'), nullable=False)
+
+			# Book 和 Publisher 多对一
+			publisher: Mapped['Publisher'] = sqlalchemy.orm.relationship(back_populates='books')
+			# Book 和 Author 多对多
+			authors: Mapped[list['Author']] = sqlalchemy.orm.relationship(secondary='book_authors', back_populates='books')
+
+			def __repr__(self):
+				return f"<Book(id={self.id}, title='{self.title}', pulished_date={self.pulished_date}, pulisher_id={self.pulisher_id})>"
+
+		base.metadata.create_all(engine, tables=[Author.__table__, AuthorProfile.__table__, Publisher.__table__, Book.__table__, book_authors]) 
+	插入关联数据：
+		一对一：
+			a = Author(name='梅梅')
+			pro = AuthorProfile(author=a, email='111@test.com', phone='1234567890', address='123 Main St', birth_date='1980-01-01')
+			session.add(pro)
+		一对多：
+			pub = Publisher(name='北京出版社')
+			b = Book(publisher=pub, title='Python 入门', pulished_date='2020-01-01')
+			session.add(b)
+		多对多：
+			pub = Publisher(name='南京出版社')
+			a1 = Author(name='哈伦')
+			a2 = Author(name='莫妮卡')
+			a3 = Author(name='钱多多')
+			b1 = Book(title='高级 Python 编程', pulished_date='2021-06-15', publisher=pub)
+			b2 = Book(title='数据库设计与实现', pulished_date='2019-09-10', publisher=pub)
+			b3 = Book(title='数据结构与算法', pulished_date='2018-03-20', publisher=pub)
+			b4 = Book(title='操作系统原理', pulished_date='2017-11-05', publisher=pub)
+			b5 = Book(title='计算机网络基础', pulished_date='2016-07-25', publisher=pub)
+			b1.authors = [a1, a2]
+			b2.authors = [a2, a3]
+			b3.authors = [a1, a3]
+			b4.authors = [a1]
+			b5.authors = [a3]
+			session.add_all([b1, b2, b3, b4, b5])
+	双向关联查询：
+		books = session.query(Book).filter(Book.title == 'Python 入门').first()
+		print('----books: ', books)
+		print('----publisher: ', books.publisher)
+		Publisher = session.query(Publisher).filter(Publisher.name == '南京出版社').first()
+		print('----publisher: ', Publisher)
+		print('----books: ', Publisher.books)

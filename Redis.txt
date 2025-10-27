@@ -1,0 +1,285 @@
+什么是 Redis？
+	Redis（全称：Remote DIctionary Server，远程字典服务器）是一个开源的、基于内存的键值存储系统。
+	它通常被归类为 NoSQL 数据库，也被称为数据结构服务器。
+
+	简单来说，你可以把它想象成一个速度极快的、存储在内存中的“大字典”。你可以通过一个“键”（Key）来快速存储、查询和操作与之关联的“值”（Value）。
+
+为什么它如此受欢迎？
+	基于内存，极致性能：
+		数据主要存储在内存（RAM）中，这使得读写操作的速度非常快，通常能达到微秒级别。相比之下，传统数据库（如 MySQL）需要读写硬盘，速度要慢几个数量级。
+	丰富的数据结构：
+		这是 Redis 与许多其他键值数据库最大的不同之处。它的“值”不仅仅是简单的字符串，还支持多种复杂的数据结构。
+	持久化到磁盘：
+		虽然数据主要存在内存中，但 Redis 提供了两种持久化机制（RDB 和 AOF），可以将内存中的数据定期或实时地保存到硬盘上，防止服务器重启或宕机时数据丢失。
+	原子操作：
+		Redis 的所有操作都是原子性的，这意味着在多客户端并发访问时，可以确保命令的执行不会被打断。这对于实现计数器、分布式锁等功能至关重要。
+	其他高级功能：
+		主从复制： 支持数据从主节点复制到多个从节点，实现数据备份和读写分离。
+		事务： 可以将多个命令打包执行。
+		发布/订阅（Pub/Sub）： 支持消息的发布和订阅模式。
+		Lua 脚本： 可以在服务器端执行 Lua 脚本，实现复杂的逻辑。
+		高可用与分片： 通过 Redis Sentinel 实现高可用，通过 Redis Cluster 实现自动分片和数据分布式存储。
+
+Redis 的主要应用场景：
+	缓存（Cache） - 最经典的用途
+		将频繁查询但很少变更的数据库结果（如网页内容、用户会话、商品信息）存储在 Redis 中。
+		后续请求可以直接从高速的 Redis 获取，极大减轻后端数据库（如 MySQL）的压力，提升应用响应速度。
+		例子： 网站首页、热点新闻。
+	会话存储（Session Store）
+		在分布式或微服务架构中，将用户登录后的会话信息（如用户ID、权限）存储在 Redis 中，而不是单个服务器的内存里。
+		这样，用户的请求可以被任何一台后端服务器处理，实现了无状态服务。
+		例子： 用户登录电商网站后，购物车信息保存在 Redis 里。
+	排行榜（Leaderboard）
+		利用 Sorted Set 数据类型，可以非常高效地实现各种排行榜，如游戏积分榜、销量排行榜。
+		例子： 实时更新游戏玩家的分数和排名。
+	消息队列（Message Queue）
+		利用 List 的阻塞操作或 Streams 类型，可以实现简单的消息队列，用于系统间的异步通信和解耦。
+		例子： 用户注册后，将发送欢迎邮件的任务放入 Redis 队列，由邮件服务异步处理。
+	实时系统
+		利用 Redis 的发布/订阅功能，可以构建实时应用，如实时聊天室、实时数据推送。
+		例子： 直播间的弹幕。
+
+五大核心数据类型：
+	String（字符串）
+	Hash（哈希）
+	List（列表）
+	Set（集合）
+	Sorted Set（有序集合）
+其他重要数据类型：
+	Stream（流）
+	Bitmaps（位图）
+	HyperLogLog（基数统计）
+	Geospatial（地理空间）
+	Bitfield（位域）
+其他特殊类型：
+	Bloom Filter（需模块）：高效判断元素是否存在（防止缓存穿透）。
+	Time Series（需模块）：时间序列数据存储与分析。
+
+
+String（字符串）：
+	二进制安全，可存储任何数据（最大512MB）
+	支持数值的原子性操作（如自增）
+	
+	应用场景：
+		缓存HTML片段
+		计数器（文章阅读量）
+		分布式锁（SETNX）
+	
+	设置键值 SET				SET key value
+	获取值 GET				GET key
+	设置键值对 SETNX			SETNX key value 仅当键不存在时
+	数值自增1 INCR			INCR counter
+	数值自减1 DECR			DECR counter
+	字符串追加 APPEND			APPEND key "追加内容"	
+	设置值+过期时间 SETEX		SETEX SET key value EX seconds 仅适用于新建键
+	查看键的过期时间 TTL		TTL key
+	设置过期时间 EXPIRE		EXPIRE key 适用于已存在的键
+	批量设置键值 MSET			MSET k1 v1 k2 v2
+	判断键是否存在 EXISTS		EXISTS KEY
+	删除键 DEL				DEL key
+	清空所有键 FLASHALL		FLASHALL
+
+Hash（哈希）：
+	键值对集合，适合存储对象
+	单个 Hash 可存储约40亿个字段
+	
+	应用场景
+		用户属性存储
+		商品信息管理
+		配置项分组
+	
+	设置字段值 HSET			HSET user:1 name "Alice" age 30
+	获取字段值 HGET			HGET user:1 name
+	设置键值对值 HSETNX		HSETNX key field value 仅当字段不存在时设置值
+	获取所有字段 HGETALL		HGETALL user:1
+	删除字段 HDEL				HDEL user:1 age
+	字段数值增加 HINCRBY		HINCRBY user:1 age 1 → 31
+	判断键是否存在 HEXISTS		HEXISTS user:1
+	获取所有字段名 HKEYS		HKEYS user:1 → ["name", "age"]
+	获取所有字段值 HVALS		HVALS user:1 → ["Alice", "30"]
+	获取字段数量 HLEN			HLEN user:1 → 2
+	
+	
+	示例：
+		"user:1": {
+		"name": "Alice",
+		"age": "30"
+	}
+
+List（列表）：
+	双向链表结构
+	支持阻塞式操作（BLPOP）
+	
+	应用场景
+		消息队列
+		最新消息排行
+		记录用户操作日志
+	
+	左侧插入 LPUSH			LPUSH key "element"
+	右侧插入 RPUSH			RPUSH key "element1"
+	左侧弹出 LPOP				LPOP key
+	左侧弹出 RPOP				RPOP key 2 移除并返回列表尾部的1个或多个元素
+	范围查询 LRANGE			LRANGE key 0 -1
+	获取指定下标元素 LINDEX	LINDEX key index
+	保留指定范围 LTRIM		LTRIM key 0 99
+	返回列表长度 LLEN			LLEN key
+	删除相同元素 LREM			LREM key 0 "element" count > 0：从头往尾删，count < 0：从尾往头删，count = 0：删所有匹配项
+	
+	阻塞操作命令，适用于队列（Queue）场景，当列表为空时阻塞等待：
+		从头部/尾部弹出元素，若列表为空则阻塞，直到超时（秒）或新元素插入： BLPOP/BRPOP key 30
+		从 key1 尾部弹出元素并插入到 key2 头部，阻塞行为同上： BRPOPLPUSH key1 key2 60
+		Redis 6.2+ 新增，更灵活的移动元素（替代 RPOPLPUSH）： LMOVE key1 key2 LEFT RIGHT
+
+Set（集合）
+	无序唯一元素集合
+	支持交并差运算
+	
+	应用场景
+		标签系统
+		共同好友推荐
+		抽奖系统（随机取值）
+	
+	添加元素 SADD				SADD tags "python"
+	获取所有元素 SMEMBERS		SMEMBERS tags
+	判断元素存在 SISMEMBER	SISMEMBER tags "redis"
+	返回集合元素数量 SCARD		SCARD tags
+	集合交集 SINTER			SINTER set1 set2
+	集合并集 SUNION			SUNION tags1 tags2
+	集合差集 SDIFF			SDIFF tags1 tags2（在 tags1 但不在 tags2 的元素）
+	将交集存储到 comm 集合		SINTERSTORE common_tags tags1 tags2
+	将并集存储到 comm 集合		SUNIONSTORE common_tags tags1 tags2
+	将差集存储到 comm 集合		SDIFFSTORE common_tags tags1 tags2
+	随机移除元素 SPOP			SPOP tags
+	移除一个或多个元素 SREM	SREM tags "cache"
+	移动元素到新集合 SMOVE		SMOVE tags new_tags "redis"
+
+Sorted Set（有序集合）
+	简称 ZSET，兼具 Set 的唯一性 和 按分数（Score）排序 特性的数据结构
+	元素关联 score 实现排序
+	高性能范围查询
+	
+	应用场景
+		排行榜
+		延时任务队列
+		带权重的消息队列
+	
+	添加带分数元素 ZADD			ZADD ranking 100 "Alice" 200 "Bob"
+		
+		添加或更新元素（带分数）
+			• NX：仅添加新元素
+			• XX：仅更新已有元素
+			• GT/LT：分数大于/小于当前值才更新
+			• CH：返回被修改的元素总数
+			• INCR：分数递增
+		
+		添加新元素并返回元素分数总和： ZADD ranking NX CH 150 "Jon
+	
+	获取元素升序排名 ZRANK			ZRANK ranking "Alice"
+	获取元素降序排名 ZREVRANK		ZREVRANK ranking "Alice"
+	按分数升序查询 ZRANGE			ZRANGE ranking 0 2 WITHSCORES
+	按分数降序查询 ZREVRANGE		ZREVRANGE ranking 0 2 WITHSCORES
+	
+	获取元素分数 ZSCORE			ZSCORE ranking "Alice"
+	为元素增加分数 ZINCRBY			ZINCRBY ranking 50 "Alice"
+	
+	删除一个或多个元素				ZREM ranking "Bob"
+	按排名区间删除元素				ZREMRANGEBYRANK ranking 0 2
+	按分数区间删除元素				ZREMRANGEBYSCORE ranking 0 100
+	
+	获取分数在 [min, max] 内的元素数量		ZCOUNT ranking 100 300
+	升序获取分数在 [min, max] 的元素		ZRANGEBYSCORE ranking 100 200
+	降序获取分数在 [min, max] 的元素		ZREVRANGEBYSCORE ranking 200 100
+	
+	计算多个有序集合的交集并存储		ZINTERSTORE result 2 zset1 zset2
+	计算多个有序集合的并集并存储		ZUNIONSTORE result 2 zset1 zset2
+	
+	删除并返回分数最高的2个元素		ZPOPMAX ranking 2
+	删除并返回分数最低的一个元素		ZPOPMIN ranking
+	
+	Redis 6.2+ 统一的范围查询（替代旧命令）：
+		ZRANGE key min max [BYSCORE | BYLEX] [REV] [WITHSCORES] [LIMIT offset count]
+		
+		key：有序集合的键名。
+		min 和 max：范围的上下界（含义取决于 BYSCORE 或 BYLEX）。
+		BYSCORE：按分数范围查询（默认按排名范围）。
+		BYLEX：按字典序范围查询（需所有元素分数相同）。
+		REV：反向返回结果（降序）。
+		WITHSCORES：同时返回分数。
+		LIMIT offset count：分页查询（类似 SQL 的 LIMIT）。
+		
+		升序查询分数在 [100, 200] 之间的元素： ZRANGE leaderboard 100 200 BYSCORE
+
+Stream（流）：
+	Redis 5.0+ 的消息队列
+	消息队列，支持消费者组、消息持久化。
+	
+	应用场景：
+		事件溯源
+		日志收集
+	
+	XADD mystream * sensor1 25  # 添加消息
+	XRANGE mystream - +         # 读取消息
+	XGROUP CREATE mystream mygroup $  # 创建消费者组
+
+Bitmaps（位图）：
+	基于 String 的位操作
+	极省空间的布尔统计
+
+	应用场景：
+		用户在线状态
+		每日活跃用户统计
+	
+	SETBIT online_users 1001 1  # 标记用户1001在线
+	GETBIT online_users 1001    # 检查用户状态
+	BITCOUNT online_users       # 统计在线人数
+	
+HyperLogLog（基数统计）：
+	极低内存估算集合基数
+	标准误差0.81%
+	
+	应用场景：
+		UV统计
+		大规模去重计数
+	
+	PFADD visits 192.168.1.1  # 添加元素
+	PFCOUNT visits           # 估算不重复量
+	PFMERGE total visits1 visits2  # 合并统计
+
+Geospatial（地理空间）：
+	存储经纬度，支持位置计算。
+	
+	适用场景：
+		附近的人、地点搜索。
+	
+	GEOADD key longitude latitude member： 添加地理位置。
+	GEODIST key member1 member2： 计算两点距离。
+	GEORADIUS key longitude latitude radius unit： 查询半径内的位置。
+
+Bitfield（位域）：
+	底层实现：将字符串视为一个虚拟的“位数组”，支持多字节整数操作（如 8/16/32/64 位）。
+	原子性多bit读写
+	支持有符号/无符号整数
+	灵活控制溢出行为
+	
+	适用场景：
+		高性能的布尔统计（如用户在线状态）
+		紧凑存储多个计数器（如游戏中的多个属性值）
+		自定义位级编码（如权限系统）
+	
+	BITFIELD key [GET type offset] [SET type offset value] [INCRBY type offset increment] [OVERFLOW WRAP|SAT|FAIL]
+	
+	type：指定整数类型，格式为 u（无符号）或 i（有符号） + 位数（如 i8表示 8 位有符号整数）。
+	offset：位偏移量（从 0 开始），表示操作的起始位位置。
+	OVERFLOW：设置溢出行为（默认 WRAP）：
+		WRAP：环绕（溢出后回绕）
+		SAT：饱和（保持最大/最小值）
+		FAIL：失败（不执行操作）
+	
+	BITFIELD mybit GET u8 0  # 从第0位开始读取8位无符号整数
+	BITFIELD mybit SET u8 0 42  # 设置从第0位开始的8位无符号整数值为42
+	BITFIELD mybit INCRBY u8 0 5  # 从第0位开始的8位无符号整数自增5
+	BITFIELD mybit OVERFLOW SAT INCRBY u8 0 300  # 设置溢出行为为饱和（SAT），然后自增一个8位无符号整数（最大值255）
+	
+	SETBIT/GETBIT的区别：
+		SETBIT		单bit	只能设置 0/1
+		BITFIELD	多bit	支持整数读写、自增

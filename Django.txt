@@ -436,7 +436,7 @@ Django 数据表操作：
 		objects.exists()		Book.filter(...).exists()		bool	判断是否存在
 		objects.aggregate()		Book.aggregate(Avg('price'))	dict	聚合计算结果
 	
-	Django 删除数据时，会模仿 SQL约束 ON DELETE CASCADE 的行为，也就是删除一个对象时也会删除与它相关联的外键对象。
+	Django 删除数据时，会模仿 SQL 约束 ON DELETE CASCADE 的行为，也就是删除一个对象时也会删除与它相关联的外键对象。
 	
 	__in： 读取区间，例如： id__in=[200,300]
 	__gt： 大于，例如： id__gt=200
