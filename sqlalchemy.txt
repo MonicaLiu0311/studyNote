@@ -72,7 +72,7 @@ SQLALchemy 是 Python 写的 ORM（对象关系映射）框架。
 创建所有表：
 	meta.create_all(engine)
 	meta.create_all(engine, meta.tables[name]) # 创建特定表
-创建所有表：
+删除所有表：
 	meta.drop_all(engine)
 	meta.tables[name].drop(engine, checkfirst=True) # 删除特定表
 更新数据：

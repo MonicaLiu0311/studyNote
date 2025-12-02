@@ -1,0 +1,107 @@
+> 如果在处理数据交互的时候发现数据库 mysql 的 sql 出现问题了，该如何排查？
+	首先判断问题类型：
+		快速检查数据库状态
+		SHOW PROCESSLIST;  -- 查看当前连接和执行的SQL
+		SHOW ENGINE INNODB STATUS;  -- InnoDB引擎状态
+		SHOW GLOBAL STATUS LIKE Threads_connected;  -- 连接数
+	常见问题症状分类：
+		SQL语法错误		拼写错误、表名错误
+		性能缓慢			索引缺失、锁等待
+		死锁/锁等待		事务竞争
+		连接超时			连接池耗尽、网络问题
+		数据不一致		事务未提交、脏读
+	SQL语法问题排查：
+		基础语法检查： 类型不匹配之类的
+		使用 EXPLAIN 分析查询： type 字段性能排序（好→坏）system > const > eq_ref > ref > range > index > ALL
+	性能问题排查：
+		慢查询日志分析
+		实时性能监控：
+			SHOW FULL PROCESSLIST; -- 查看当前运行的慢查询
+			SHOW ENGINE INNODB STATUS;  -- 查看锁状态，关注 TRANSACTIONS 和 DEADLOCK 部分
+			SELECT * FROM information_schema.statistics WHERE table_name = users; -- 查看索引使用情况
+			SHOW TABLE STATUS LIKE users; -- 查看表状态
+		索引优化检查： 检查未使用索引、索引选择性分析（越接近1，索引效果越好）
+	死锁和锁问题排查：
+		死锁检测
+		锁等待分析
+		事务隔离级别检查
+	数据一致性问题排查：
+		事务状态检查
+		主从复制问题
+	
+	排查优先级：
+		第一优先级（立即处理）：连接池满、死锁、主从复制中断
+		第二优先级（尽快处理）：性能下降、慢查询增多
+		第三优先级（计划处理）：索引优化、SQL重构
+
+请说明 mysql、sqlserver、redis 数据库的区别、优点、底层逻辑：
+	MySQL、SQLServer：关系型数据库，存储模型是表，查询语言是SQL，
+	
+	MySQL：
+		优点：开源降低了成本、跨平台（可在 Linux、Windows、macOS 等多种操作系统上运行）、易用性（安装、配置和学习曲线相对平缓）。
+		底层逻辑：
+			存储引擎架构：这是 MySQL 的核心特点。它支持可插拔的存储引擎，意味着你可以为不同的表选择不同的存储引擎，以适应各种场景。
+				InnoDB（默认引擎）：支持事务（ACID）、行级锁、外键。适用于需要高可靠性和事务安全的大部分场景。
+			数据存储：数据以表的形式存储在磁盘文件中。索引结构通常使用 B+Tree，这使得范围查询和排序非常高效。
+			事务处理（以 InnoDB 为例）：使用 MVCC 来实现事务隔离。通过 回滚日志 和 重做日志 来保证事务的原子性和持久性。
+	
+	SQLServer：与微软生态集成、企业级功能、强大管理工具
+		优点：与微软生态无缝集成、强大的企业级功能（商业智能套件、列存储索引用于大数据分析、高级安全特性如透明数据加密）、出色的管理工具（SQL Server Management Studio）、可靠性（作为商业软件，提供强大的技术支持和稳定性保障）
+		底层逻辑：
+			页结构：SQL Server 的基本存储单位是页。表的数据和索引都存储在 8KB 的页中。
+			事务日志：对数据库的任何修改都会先被记录到 事务日志 中，然后再写入数据文件。这确保了事务的持久性，并支持数据恢复。
+			锁和并发：使用复杂的锁机制（如行锁、页锁、表锁）和 MVCC（在更新时）来管理并发访问，确保数据一致性。
+			专有扩展：使用 T-SQL 作为其 SQL 语言的扩展，提供了更强大的编程能力，如存储过程、触发器、用户定义函数等。
+		
+	Redis：非关系型/NoSQL，存储模型键值对，查询语言是自有命令（如 GET, SET, HGETALL），内存存储、极速读写、支持复杂数据结构
+	优点：极致性能、丰富的数据结构、原子操作（得益于其单线程架构）、持久化（RDB 和 AOF两）、高可用与分布式（Redis Sentinel 和 Redis Cluster）。
+	底层逻辑：
+		内存存储：所有数据都放在 RAM 中，这是其高速的根本原因。它通过虚拟内存机制和过期策略将不常用的数据交换到磁盘（但此功能已不推荐）。
+		单线程事件循环：Redis 使用单线程处理所有客户端请求。避免了多线程的上下文切换和竞争条件，使得命令执行是原子的，且非常高效。其高性能秘诀在于基于内存的操作和非阻塞 I/O 多路复用。
+		数据结构实现：Redis 在底层用 C 语言实现了自己的一套高效数据结构，例如：
+			String：简单动态字符串。
+			Hash：使用压缩列表或哈希表。
+			List：使用快速链表。
+			Set：使用整数集合或哈希表。
+			ZSet：使用跳跃列表和哈希表的组合。
+		持久化机制：
+			RDB：在指定时间间隔内，生成内存数据的二进制快照。恢复快，但可能丢失最后一次快照后的数据。
+			AOF：记录每一个写操作命令，并在重启时重新执行这些命令来恢复数据。数据更安全，但文件更大，恢复更慢。
+
+数据库性能监控：
+	sql server 性能监控：
+		开启内置的查询存储： ALTER DATABASE [YourDatabase] SET QUERY_STORE = ON;
+		动态管理视图实时监控： 内存中的实时系统信息表 sys.dm_exec_requests，包含执行状态、资源使用、等待信息等，查找慢查询、查看阻塞链、资源消耗排名
+		创建监控存储过程： 定期收集监控数据
+	Python 端监控（应用层面）：
+		高级 SQL 监控器类： 监控数据存储，设置慢查询阈值，记录查询指标，可以发送邮件、钉钉、企业微信等告警
+
+查看表结构的命令：
+	MySQL / MariaDB：
+		查看 users 表的结构： DESC users;
+		查看详细的建表语句： SHOW CREATE TABLE 表名;
+	SQL Server：
+		使用系统存储过程 sp_help： EXEC sp_help '表名';
+		查询信息模式视图： 
+			SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT
+			FROM INFORMATION_SCHEMA.COLUMNS
+			WHERE TABLE_NAME = '表名';
+
+merge 命令的作用：
+	它允许你根据条件同时处理插入和更新。
+	它的核心思想是："如果存在则更新，如果不存在则插入"。
+	
+		MERGE INTO 目标表 AS target
+		USING 源表 AS source
+		ON (target.关联键 = source.关联键)
+		WHEN MATCHED THEN
+			UPDATE SET target.列 = source.列  -- 匹配时执行更新
+		WHEN NOT MATCHED THEN
+			INSERT (列1, 列2) VALUES (source.列1, source.列2);  -- 不匹配时执行插入
+	
+	SQL Server： MERGE，功能最完整
+	MySQL： INSERT ... ON DUPLICATE KEY UPDATE，简化版 MERGE
+
+union 和 union all 的区别：
+	union： 去重
+	union all： 不去重

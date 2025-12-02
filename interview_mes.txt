@@ -1,0 +1,273 @@
+MES系统发布后系统可能会出现的问题，怎么解决：
+	1.性能问题
+		数据库查询缓慢，加载超时
+		并发用户多时系统响应变慢
+		大数据量报表生成时间过长
+		
+		解决方案：
+			数据库优化： 添加索引，查询优化，分表分区
+			应用层优化： 缓存常用数据，异步任务处理耗时操作
+	2.数据一致性问题
+		物料库存数量不一致
+		工单状态与实际生产进度不符
+		数据同步延迟导致决策错误
+		
+		解决方案： 使用数据库事务保证数据一致性，定期数据校验任务
+	3.接口集成问题
+		与ERP系统数据同步失败
+		第三方系统接口变更导致集成中断
+		
+		解决方案： 增加重试机制和熔断器，接口变更监控
+	4.用户操作问题
+		用户误操作导致数据错误
+		权限配置不当导致越权操作
+		操作流程复杂导致用户困惑
+		
+		解决方案： 操作确认和撤销机制，权限验证装饰器
+
+> 移动平板扫描项目（实时性优先）
+	高频率、小批量的数据提交，关键在于保证查询快、数据不丢失、提交低延迟。
+	【Flask + SQL Server + sqlalchemy】
+
+> 生产数据溯源接口开发：
+	核心是处理高并发、复杂的数据查询请求。每次查询涉及多表关联、聚合计算和历史数据追溯，是I/O密集型任务。
+	瓶颈在数据库I/O，异步在单线程内处理数千并发，资源消耗最小。
+	Redis在此架构中作为高性能缓存层和请求协调器，目标是最大限度减少对数据库的直接访问。
+	异步 I/O + Redis 缓存（FaskAPI + redis）：
+		异步I/O：单线程处理数千并发，利用事件循环和协程在I/O等待时切换任务，避免线程切换开销（主要消耗在事件循环），最适合 I/O 密集型场景。
+		Redis 缓存：将复杂查询结果缓存，减少数据库压力，提升响应速度。
+	但是因为受限于 Flask 架构，所以使用 【多线程 + MySQL + redis + sqlalchemy】 来实现。
+		Redis 在此架构中作为高性能缓存层和查询结果缓存。
+			查询结果缓存：将复杂的多表联接查询结果缓存起来，避免相同查询反复冲击数据库。
+			请求合并与防击穿： 防止缓存失效时，大量并发请求同时到达数据库（缓存击穿）。
+				请求合并：使用 Redis 分布式锁，第一个请求执行查询，后续相同请求等待结果而不是重复查询。
+		并发模型选择：多线程 (ThreadPoolExecutor)
+			I/O密集型特性：虽然查询本身复杂，但线程大部分时间在等待数据库响应，属于I/O等待状态，GIL影响较小。
+			轻量级并发：与多进程相比，线程创建和上下文切换开销更小，更适合处理数百个并发连接。
+			内存共享：所有线程共享同一内存空间，便于共享缓存连接池和配置信息。
+	更好的做法是把数据提前缓存起来，放到 redis 中，风险是客户可能一年都不会用，一年后再查询（用上面的实时查询缓存方法解决）。
+
+接口监控：
+	基础健康检查接口： 应用本身状态、数据库连接检查、缓存服务检查、外部API检查、磁盘空间检查、内存使用检查
+	接口监控装饰器： 获取统计信息
+	自动化监控脚本： 检查失败或响应慢告警
+	日志监控和分析： 结构化日志配置
+
+跨域访问问题：
+	浏览器出于安全考虑，实施了“同源策略”。当一个请求的 协议（http/https）、域名（domain）、端口（port） 有任何一项不同，就会构成跨域，浏览器会拦截响应。
+	后端配置CORS（最常用、最正规的解决方案）：CORS（跨域资源共享）是一种W3C标准。它的核心思想是：后端通过设置HTTP响应头，来告诉浏览器“允许来自某个域的请求访问我”。
+	开发环境使用代理（Proxy）：在开发阶段，前端开发服务器可以配置一个代理，将API请求转发到后端服务器。因为服务器到服务器之间没有跨域限制，只有浏览器有。
+
+数据格式兼容问题：
+	核心原则：前后端约定统一的数据格式（通常是JSON），并在HTTP头部（Headers）中明确声明。
+
+全链路问题定位框架：
+	问题定位
+		1. 黄金法则：分层排查
+			报告问题-查看影响范围：
+				单个用户： 前端/网络 问题，检查浏览器控制台
+				部分用户： 服务实例/区域 问题，检查负载均衡日志
+				所有用户： 后端/数据库 问题，检查服务监控
+		2. 排查顺序：从外到内
+			用户端 → 网络 → 负载均衡 → 服务入口 → 业务逻辑 → 数据层 → 外部依赖
+	
+	具体排查工具和命令：
+		1. 前端/客户端层 
+			浏览器开发者工具： F12 
+				Network 标签： 查看请求状态、响应时间、HTTP状态码
+				Console 标签： JavaScript错误
+				Application 标签： Cookies、LocalStorage
+		2. 网络层
+			DNS解析： nslookup api.example.com
+			网络连通性： ping api.example.com
+			端口检查： telnet api.example.com 443
+			抓包分析： tcpdump -i any host api.example.com -w capture.pcap
+		3. 网关/负载均衡层
+			Nginx 日志分析（实时查看错误）： tail -f /var/log/nginx/error.log
+			检查配置： nginx -t
+		4. 应用服务层
+			服务状态检查：
+				进程状态： ps aux | grep java
+				查看线程： top -H -p <PID>
+				端口监听： lsof -i :8080 或者 netstat -tlnp | grep 8080
+				服务健康检查： curl -I http://localhost:8080/health
+			日志分析：
+				实时日志跟踪： tail -f /var/log/app/application.log
+				按时间范围搜索： grep "2024-01-15 14:" /var/log/app/application.log
+			性能分析：
+				CPU使用率： vmstat 1 10 或者 mpstat -P ALL 1
+				内存分析： free -h
+				I/O分析： iostat -x 1 或者 iotop
+		5. 缓存层（Redis/Memcached）
+			Redis 连接检查： redis-cli -h redis-host -p 6379 ping
+			Redis 监控：
+				redis-cli info  # 全部信息
+				redis-cli slowlog get 10  # 慢查询
+			Redis 内存分析：
+				redis-cli info memory
+				redis-cli --bigkeys  # 找出大key
+		6. 数据库层
+			数据库连接：
+				连接测试： mysql -h db-host -u user -p -e "SELECT 1"
+				连接数监控： mysql -e "SHOW PROCESSLIST;"
+			SQL性能分析：
+				MySQL 慢查询日志： 
+					SET GLOBAL slow_query_log = 'ON';
+					SET GLOBAL long_query_time = 2;
+				查看正在运行的查询：
+					SHOW PROCESSLIST;
+					SELECT * FROM information_schema.processlist;
+				执行计划分析：
+					EXPLAIN EXTENDED SELECT * FROM users WHERE id = 1;
+					EXPLAIN ANALYZE SELECT * FROM users WHERE id = 1;
+				锁等待分析：
+					SHOW ENGINE INNODB STATUS\G
+					SELECT * FROM information_schema.INNODB_LOCKS;
+			数据库监控：
+				MySQL 状态： mysqladmin -h db-host -u user -p extended-status
+		7. 外部服务/第三方API：
+			API可用性测试：
+				curl -X GET "https://api.external.com/endpoint" \
+				-H "Authorization: Bearer token" \
+				-w "\nHTTP Code: %{http_code}\nTotal Time: %{time_total}s\n"
+	
+	常见问题场景定位：
+		接口响应慢：
+			排查路径：
+			1. 浏览器Network面板 → 查看哪个阶段耗时（TTFB/Content Download）
+			2. curl -w 分析各阶段时间
+			3. 服务端日志 → 查找处理时间
+			4. SQL查询 → EXPLAIN分析
+			5. 网络延迟 → traceroute
+		接口返回5xx错误：
+			排查路径：
+			1. 查看负载均衡日志（502/504 → 后端无响应）
+			2. 检查服务进程是否存活
+			3. 检查服务日志中的异常堆栈
+			4. 检查依赖服务（DB、Redis）连接
+			5. 检查磁盘空间（No space left on device）
+		数据库CPU飙升：
+			排查路径：
+			1. SHOW PROCESSLIST → 查看正在执行的查询
+			2. 慢查询日志分析
+			3. 检查是否有全表扫描
+			4. 检查索引是否失效
+			5. 监控锁等待
+		内存泄漏：
+			排查路径：
+			1. top 查看RES内存增长
+			2. Java: jmap -histo:live <PID>
+			3. 分析GC日志
+			4. 检查是否有缓存无限增长
+			5. 使用内存分析工具（MAT, YourKit）
+	
+	监控和告警体系：
+		关键监控指标：
+			前端:
+			  - 页面加载时间
+			  - API调用成功率
+			  - 错误率（JS错误）
+			网关:
+			  - QPS
+			  - 响应时间p95/p99
+			  - 5xx错误率
+			服务层:
+			  - CPU/Memory使用率
+			  - JVM GC频率
+			  - 线程池状态
+			  - 接口TP99
+			缓存:
+			  - 命中率
+			  - 内存使用率
+			  - 响应时间
+			数据库:
+			  - 连接数
+			  - 慢查询数
+			  - 锁等待
+			  - 复制延迟
+		分布式追踪（必备！）：
+			工具选择:
+			  - Jaeger
+			  - Zipkin
+			  - SkyWalking
+			  - AWS X-Ray
+			关键追踪:
+			  - Trace ID贯穿全链路
+			  - 每个环节耗时
+			  - 错误传播路径
+	
+	问题定位工具箱：
+		1. 网络诊断： ping, traceroute, mtr, telnet, nc, curl
+		2. 系统监控： top, htop, vmstat, iostat, sar
+		3. 进程分析： ps, lsof, strace, pstack
+		4. 日志分析： grep, awk, sed, jq, less, tail
+		5. 性能分析： perf, tcpdump, wireshark, ab, wrk
+		6. 数据库工具： mysqladmin, pt-query-digest, mysqldumpslow
+		7. 可视化工具： Grafana, Kibana, Prometheus
+	
+	问题定位检查清单：
+		用户端：是否是个别用户问题？
+		网络：DNS、CDN、防火墙是否正常？
+		入口层：负载均衡健康检查是否通过？
+		服务层：服务进程是否存活？日志有无异常？
+		依赖服务：数据库、缓存、消息队列是否可达？
+		资源层：CPU、内存、磁盘是否充足？
+		外部依赖：第三方API是否正常？
+		配置变更：最近是否有部署或配置修改？
+
+当日志分散在不同服务器、不同路径时，手动查找就像大海捞针。以下是智能定位分布式日志的系统化方案：
+	核心思想：不要手动登录服务器查找，而是通过集中式日志系统 + Trace ID 快速定位。如果还没有建立集中式系统，先用自动化脚本统一搜索。
+
+	集中式日志系统（必备基础）：
+		ELK Stack	大型复杂系统	功能全面，可视化强	资源消耗大
+		Loki + Grafana	容器化环境	轻量，适合K8s	功能相对简单
+	快速定位错误日志的方法：
+		使用分布式追踪（Trace ID）
+			核心思想：一个请求一个唯一ID，贯穿全链路
+			在每个服务的日志中注入Trace ID 
+
+	不同级别日志存放不同位置：
+		/var/log/app/
+		├── info.log      # INFO级别
+		├── error.log     # ERROR级别
+		├── debug.log     # DEBUG级别（仅开发环境）
+		└── audit.log     # 审计日志
+
+如果数据库的表宽很大，适合用哪个数据库存储？
+	1. 列式数据库（最佳选择）
+		数据库			特点						适用场景
+		ClickHouse		极致性能，压缩比高			实时分析，宽表聚合
+		Apache Druid	时序优化，实时摄取			监控，事件分析
+		Vertica			企业级，MPP架构			商业智能，数据仓库
+		Greenplum		PostgreSQL生态，MPP		混合负载
+		
+		优势：
+			只读取需要的列，I/O效率高
+			更好的压缩率（同类型数据在一起）
+			适合聚合查询
+	2. 文档数据库
+		数据库				特点						适用场景
+		MongoDB				灵活schema，文档模型		用户画像，动态属性
+		Couchbase			内存优先，高性能			实时应用
+		Amazon DynamoDB		全托管，自动扩展			Serverless应用
+		
+		优势：
+			每行可以有不同列
+			易扩展新字段
+			嵌套结构节省空间
+	3. 宽列数据库（Wide-Column）
+		数据库				特点					适用场景
+		Apache Cassandra	分布式，高可用			IoT，用户行为
+		ScyllaDB			C++重写，更高性能		低延迟需求
+		HBase				Hadoop生态，强一致	历史数据查询
+		优势：
+		原生支持超宽表
+		列族设计优化存储
+		适合稀疏数据
+	4. 关系数据库优化方案
+		PostgreSQL（推荐）：
+			方案1：JSONB列存储动态属性
+			方案2：垂直分表，主表：基本信息，属性表：动态属性（EAV模型）
+			方案3：使用HStore（简单键值）
+		MySQL 8.0+：
+			使用JSON类型

@@ -60,8 +60,11 @@ Python3 解释器：
 		运行时系统
 			管理内存（引用计数+垃圾回收）
 			处理异常和动态类型
-
+	
 	执行过程： 语法分析 -> 生成抽象语法树（AST）-> 分配内存 -> 编译字节码 -> PVM 执行代码
+	
+	垃圾回收：
+		Python 主要使用 引用计数 作为主要垃圾回收机制，并辅以 分代回收 和 标记清除 来解决循环引用问题。
 
 Python3 运算符：
 	算术运算符：  +  -  *  /  %  **  //
@@ -242,7 +245,7 @@ Python3 字符串：
 			isnumeric()： 检查字符串是否只包含数字，识别 所有 Unicode 数字字符，包括汉字数字、罗马数字等
 			isspace()： 检查字符串中的所有字符是否均为空白字符（非打印字符可能不生效）
 			istitle()： 检查字符串是否符合标题化格式（每个单词首字母大写，其余小写）
-			isupper()： 检查字符串中的字母字符是否全部为小写（非字母字符不影响结果）
+			isupper()： 检查字符串中的字母字符是否全部为大写（非字母字符不影响结果）
 			join(seq)： 将序列（如列表、元组）中的元素以指定字符串为分隔符连接成一个新字符串。它是高效拼接字符串的首选方式
 			len(string)： 返回字符串长度
 			ljust(width[, fillchar])： 返回一个原字符串左对齐,并使用 fillchar 填充至长度 width 的新字符串，fillchar 默认为空格
@@ -270,6 +273,16 @@ Python3 字符串：
 			upper()： 转换字符串中的小写字母为大写
 			zfill (width)： 在字符串的左侧填充 0，使其达到指定长度。如果字符串本身长度已超过或等于指定宽度，则返回原字符串
 			isdecimal()： 检查字符串中的所有字符是否均为十进制数字字符。它是判断字符串是否可转换为整数的安全方式之一
+			ascii_code = ord(char)： 字符转ASCII码
+			character = chr(code)： ASCII码转字符
+			常用ASCII码范围：
+			ranges = [
+				("控制字符", 0, 31),
+				("数字 0-9", 48, 57),
+				("大写字母 A-Z", 65, 90),
+				("小写字母 a-z", 97, 122),
+				("可打印字符", 32, 126)
+			]
 
 Python3 列表：
 	列表可以被更新，删除，截取，拼接，嵌套，比较。
@@ -521,11 +534,83 @@ Python3 数据结构：
 		获取栈的大小（Size）: 获取栈中元素的数量。
 	
 	队列： 队列是一种先进先出（FIFO, First-In-First-Out）的数据结构，意味着最早添加的元素最先被移除。 更推荐使用 collections.deque 实现队列而非 list。
+		同步队列：
+			queue.Queue: 线程安全的 FIFO 队列
+			queue.LifoQueue: 线程安全的 LIFO 队列（栈）
+			queue.PriorityQueue: 线程安全的优先级队列
+			collections.deque: 双端队列（非线程安全）
+		
+		进程队列
+			multiprocessing.Queue: 进程安全的 FIFO 队列
+			multiprocessing.JoinableQueue: 可等待的进程队列
+			multiprocessing.SimpleQueue: 简化的进程队列
+			
+			multiprocessing.Queue 的实现
+				管道(Pipe): 使用 os.pipe() 创建匿名管道进行进程间通信
+				序列化: 使用 pickle 序列化数据，通过管道传输
+				锁机制: 使用 multiprocessing.Lock 保证进程安全
+				信号量: 控制队列容量，防止内存溢出
+		
+		异步队列
+			asyncio.Queue: 异步队列，用于协程
+			asyncio.LifoQueue: 异步 LIFO 队列
+			asyncio.PriorityQueue: 异步优先级队列
+		
+		队列类继承关系：
+			queue.Queue: 继承自 queue._Queue，使用 threading.Lock
+			multiprocessing.Queue: 使用 Pipe 和 Lock 实现进程间通信
+			asyncio.Queue: 使用 asyncio.Lock 和 Condition 实现
+		
+		queue.Queue()： 多线程环境
+			Queue 的核心同步机制
+				互斥锁: threading.Lock - 保护内部数据结构
+				条件变量: threading.Condition - 线程间通信
+				信号量: 用于限制队列容量
+			
+			q = queue.Queue()                   # 创建无限大小队列
+			q_maxsize = queue.Queue(maxsize=5)  # 创建最大容量为5的队列
+			q.put("A", [timeout=2])             # 入队，[队列已满时会阻塞直到超时]
+			item = q.get([timeout=1])           # 出队，[队列为空时会阻塞直到超时]
+			q.empty()                           # 队列是否为空
+			q.full()                            # 队列是否已满
+			q.put_nowait("C")                   # 非阻塞入队（队列已满会立即抛出异常）
+			item = q.get_nowait()               # 非阻塞出队（队列为空会立即抛出异常）
+			q.qsize()                           # 队列大小
+			q.task_done()                       # 标记任务完成
+			q.join()                            # 阻塞直到所有任务标记完成
+		
+		queue.PriorityQueue： 需要优先级
+			pq = queue.PriorityQueue()          # 创建优先级队列（数值越小优先级越高）
+			pq.put((priority, task))            # 入队（优先级，数据）
+			priority, task = pq.get()           # 按优先级出队
+		
+		queue.LifoQueue()： LIFO队列，相当于栈
+			stack.put(item)
+			item = stack.get()
+		
+		collections.deque： 单线程环境
+			dq = deque()                        # 创建双端空队列
+			dq = deque([1, 2, 3])               # 从列表初始化
+			dq = deque("hello")                 # 从字符串初始化
+			dq = deque([1, 2, 3], maxlen=5)     # 限制最大长度，超出限制自动移除最左边的
+			dq.append("right1")                 # 从右端添加（类似列表的append）
+			dq.appendleft("left1")              # 从左端添加
+			right_item = dq.pop()               # 从右端删除
+			left_item = dq.popleft()            # 从左端删除
+			front = q[0]                        # 查看队首（不移除），FIFO
+			top = stack[-1]                     # 查看栈顶，LIFO
+			dq.extend([4, 5])                   # 从右端扩展
+			dq.extendleft([0, -1])              # 从左端扩展，[-1, 0, 1, 2, 3]
+			dq.insert(index, x)                 # 在索引位置插入 x
+			dq.remove(x)                        # 删除第一个 x
+			dq.clear()                          # 清空队列
+			dq.count(x)                         # 统计 x 的个数
+			dq.rotate(n)                        # 正数向右旋转，负数向左旋转，n 位
 	
 	矩阵：通常用 嵌套列表 或 NumPy 数组实现。
-	矩阵转置：np.transpose(matrix) 或 matrix.T
-	矩阵加法：C = A + B
-	矩阵乘法：点积 np.dot(A, B) 和 逐元素乘法 C = A * B
+		矩阵转置：np.transpose(matrix) 或 matrix.T
+		矩阵加法：C = A + B
+		矩阵乘法：点积 np.dot(A, B) 和 逐元素乘法 C = A * B
 
 
 Python3 模块：
@@ -1027,6 +1112,27 @@ Python3 标准库概览：
 		collections： 扩展容器类型，提供更多数据结构如defaultdict、Counter等。
 		typing： 类型提示支持（Python 3.5+），用于静态类型检查。
 
+re 正则表达式：
+	re.match(pattern, string)： 只匹配字符串的开头，如果开头不匹配，直接返回 None。
+	re.search(pattern, string)： 扫描整个字符串，返回第一个匹配的结果，用 result.group() 取值，用 result.span() 取索引。
+	re.findall(pattern, string)： 返回所有匹配的字符串列表 List。
+	re.finditer(pattern, string)： 与 findall类似，但返回匹配对象的迭代器，可以获取每个匹配的详细信息。
+	re.sub(pattern, repl, string)： 替换所有匹配的子串，返回替换后的新字符串（批量替换或清洗数据）
+	re.split(pattern, string)： 比字符串的 split()方法更强大，可以按复杂模式分割，返回分割后的字符串列表
+	result.group()： 取值。
+	result.span()： 取索引。
+	re.compile(r"...")： 编译正则表达式，适合需要重复使用同一个模式的场景。
+	
+	\d： 数字，等价于 [0-9]
+	\w： 单词字符（字母、数字、下划线）
+	\s： 空白字符（空格、制表符等）
+	.： 任意字符（除换行符）
+	*： 前一个字符0次或多次
+	+： 前一个字符1次或多次
+	?： 前一个字符0次或1次
+	{n,m}： 前一个字符n到m次
+	[abc]： 匹配a、b或c中的任意一个
+	(pattern)： 捕获分组
 
 asyncio 异步编程：
 	协程 (Coroutine)： 协程是 asyncio 的基础，使用 async/await语法定义。

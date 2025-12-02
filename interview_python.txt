@@ -1,0 +1,788 @@
+英文介绍：
+	Good afternoon, everyone. I'm Monica. I graduated in 2019 from Xi'an University of Science and Technology with a degree in Computer Science and Technology, and I have over five years of professional experience with two jobs.
+
+	My first job was in Jiangsu, where I was mainly engaged in MES system development and writing Python interfaces, including product traceability interfaces.
+
+	My second job was in Xi'an, where I worked on maintaining Microsoft's vcpkg platform. My main tasks involved building packages using CMake and writing automated test scripts to classify GitHub issues and pull requests.
+
+python中 字典底层 和 集合底层 是什么？
+	字典底层 dict：
+		实际存储为两个数组：
+			indices = [None, 0, None, 1, 2, None]  # 索引数组，指向 entries
+			entries = [{'hash': hash1, 'key': key1, 'value': value1}, ...] # 紧凑的键值对数组（键的哈希值缓存,键对象,值对象）
+			# 1. 计算哈希值
+			# 2. 计算初始索引
+			# 3. 查找空闲槽或相同键，空闲槽插入新条目，键已存在更新值
+	哈希表的底层：
+		实际上是一个数组，但配合了特定的索引机制和冲突解决策略。
+		核心概念：数组 + 哈希函数（计算数组的索引）
+	集合底层 set： 集合本质上是只有键没有值的字典
+	列表底层 list： 动态数组，按需分配内存
+	元组底层 tuple： 固定数组，地址不可变
+	小顶堆底层 heapq： 使用列表存储完全二叉树（父节点 ≤ 子节点）
+	双端队列底层 collections.deque： 使用块状链表（双向链表 + 固定大小数组块），每个块通常存储 64 个元素
+	线程安全队列底层底层 queue.Queue： 使用 collections.deque 作为底层存储，添加了 线程锁 和 条件变量 保证线程安全，支持阻塞操作
+	优先级队列底层 queue.PriorityQueue： 使用 heapq 模块，添加了线程安全机制，元素格式：(priority, data)
+	块状链表 Chunked Linked List
+		由多个固定大小的"块"组成，每个块是一个小数组，块之间用链表连接：
+			块状链表 = [块1: [元素1, 元素2, 元素3, ..., 元素64],  # -> 
+				块2: [元素65, 元素66, ..., 元素128],     # -> 
+				块3: [元素129, 元素130, ...]            # -> None
+			]
+	数组底层 Array：
+		数组在内存中是连续存储的
+		内存地址: 0x1000 0x1004 0x1008 0x100C 0x1010
+		数组元素: [  1   ,  2   ,  3   ,  4   ,  5   ]
+	链表底层 Linked List：
+		链表在内存中是非连续存储的
+		节点1: 0x1000 [数据: A, 下一个: 0x2000] → 节点2: 0x2000 [数据: B, 下一个: 0x3000] → 节点3: 0x3000 [数据: C, 下一个: None]
+		Python 没有内置的链表，但可以自己实现
+
+怎么保证线程安全：
+	互斥锁（Lock）
+	可重入锁（RLock）
+	条件变量（Condition）
+	线程安全数据结构
+	原子操作
+怎么保证进程安全：
+	使用进程锁（Process Lock）
+	进程安全的数据结构
+	使用管道（Pipe）和队列（Queue）
+	使用进程池
+
+大量文件归类识别的 Python 解析方法：
+	按文件类型：用 mimetypes 库识别文件类型（如image/jpeg、text/plain），再分类到对应目录。
+	按内容特征：
+		文本文件：读取内容，用正则表达式（如匹配关键词）、NLP工具（如jieba分词）识别主题；
+		图片文件：用 Pillow（PIL） 读取像素、格式，或 OpenCV 识别内容（如人脸、物体）；
+		视频文件：用 moviepy 提取帧，再用图片识别方法处理。
+	批量处理：用 os、pathlib 遍历文件，结合 concurrent.futures（多线程/多进程）加速解析。
+
+怎么优化一段 python 代码：
+	性能优化： 
+		使用列表推导式代替循环
+		使用生成器处理大数据
+		避免不必要的函数调用
+		使用内置函数加速开发
+		字符串拼接优化： 使用join，使用生成器表达式，格式化字符串（Python 3.6+）
+		避免重复计算： 循环内不会改变的值在循环前预先计算
+	内存优化：
+		及时释放大对象
+		避免循环引用
+		使用生成器代替列表： 惰性加载，避免一次性加载所有数据导致内存溢出
+		适当使用 __slots__： 动态属性创建大量实例时内存占用高，使用__slots__节省内存
+			__slots__是一个类属性，用于限制类的实例可以拥有的属性。它通过优化内存使用来提高性能。
+	算法和数据结构优化：
+		选择合适的数据结构： 使用集合进行查找去重，使用Counter统计频率
+		缓存计算结果： 增加计算速度
+	代码结构和可读性优化：
+		过深的嵌套： 提前返回减少嵌套，使用卫语句（Guard Clauses）
+		过长的函数： 单一职责，拆分函数
+	异常处理优化：
+		过于宽泛的异常捕获： 具体异常类型
+		异常代替错误码： 增加可阅读性
+	并发和并行优化：
+		IO密集型： 使用线程池 或 异步
+		CPU密集型： 使用进程池
+	数据库和IO优化：
+		N+1查询问题： 使用JOIN或批量查询，然后在内存中分组
+		文件操作优化： 小文件多次读取 不如 一次读取多次使用，大文件使用缓冲区
+	性能、内存分析工具
+
+> 对于 Flask 架构，收到一个 request 请求的处理流程：
+	1. 请求到达前的准备阶段：
+		创建 Flask 类实例
+		加载配置（数据库连接、密钥等）
+		注册扩展（如 Flask-SQLAlchemy、Flask-Login）
+		
+		pv源  
+		
+	2. 请求进入路由系统：
+		请求到达 WSGI 服务器（如 Gunicorn）
+		Flask 根据 URL 路径和 HTTP 方法匹配路由规则
+		提取 URL 中的变量（如 <int:user_id>）
+		检查 HTTP 方法是否允许（405 Method Not Allowed）
+	3. 请求上下文建立：
+		request		单次请求		获取表单数据、查询参数
+		session		用户会话		登录状态、用户数据
+		g			单次请求		请求级全局变量（如数据库连接）
+	4. 请求钩子（Before/After）
+		before_first_request	应用启动后第一个请求	初始化数据库
+		before_request			每个请求前			身份验证、权限检查
+		after_request			每个请求后（成功时）	添加HTTP头
+		teardown_request		每个请求后（即使异常）	资源清理
+	5. 视图函数处理：
+		参数获取：获取查询参数/获取表单数据/获取JSON数据
+		数据验证
+		业务逻辑：数据库操作、调用外部API、计算处理
+		响应生成：返回JSON/返回模板/重定向/错误响应
+	6. 错误处理
+	7. 响应返回：
+		响应对象构建
+		响应组件：状态码：200（默认）、201、404等
+				Headers：Content-Type、Cache-Control等
+				Body：HTML、JSON、文件等
+				Cookies：
+	8. 请求后清理：
+		关闭数据库连接
+		释放文件句柄
+		清除临时文件
+
+> 对于一个django框架，收到一个request请求的处理流程：
+	1. 请求到达前的准备 (settings.py)
+		Django 启动时首先加载配置，这决定了请求如何处理。
+	2. 首先到达服务器 WSGI 入口 wsgi.py：创建 WSGI 应用实例
+	3. 中间件处理（请求阶段）：process_request
+		内置中间件的作用：
+			SessionMiddleware：初始化 request.session
+			CsrfViewMiddleware：CSRF token 验证
+			AuthenticationMiddleware：设置 request.user
+	4. URL 路由解析：Django 通过 urls.py 进行路由匹配
+	5. 视图处理（核心业务逻辑）：
+		基于函数的视图 (FBV)
+		基于类的视图 (CBV) - Django 推荐方式
+	6. 模型操作（数据库交互）
+	7. 模板渲染（返回 HTML）
+	8. 中间件处理（响应阶段）：process_response
+
+Django 自封装数据库的升降级：
+	python manage.py migrate [应用] [版本]
+	降级先查看迁移历史找到想要回退的版本号： python manage.py showmigrations
+
+Flask 命令：
+	flask db init				初始化迁移环境
+	flask db migrate			创建迁移脚本
+	flask db upgrade			应用数据库迁移
+	flask db downgrade			回滚迁移
+	flask run					启动开发服务器
+	flask shell					交互式Shell
+	flask routes				查看路由
+
+Django 命令：
+	创建新项目： django-admin startproject <项目名称> [目标目录]
+	创建新应用： django-admin startapp <应用名称> [目标目录]
+	检查项目配置： django-admin check
+	创建超级用户： django-admin createsuperuser
+	生成数据库迁移文件： python manage.py makemigrations
+	查看迁移历史： python manage.py showmigrations
+	数据库迁移（升级/降级）： python manage.py migrate [应用名] [迁移版本]
+	查看迁移的 SQL 语句： python manage.py sqlmigrate <app_name> <迁移文件名>
+	撤销所有迁移： python manage.py migrate <app_name> zero
+	启动开发服务器： python manage.py runserver [IP:端口]
+
+Docker 构建命令：
+	docker run				启动一个新的容器并运行命令						docker run -d ubuntu
+	docker ps				列出当前正在运行的容器							docker ps
+	docker ps -a			列出所有容器（包括已停止的容器）					docker ps -a
+	docker exec				在运行的容器中执行命令							docker exec -it container_name bash
+	docker stop				停止一个或多个容器								docker stop container_name
+	docker start			启动已停止的容器								docker start container_name
+	docker restart			重启一个容器									docker restart container_name
+	docker rm				删除一个或多个容器								docker rm container_name
+	docker logs				查看容器的日志									docker logs container_name
+	docker inspect			获取容器或镜像的详细信息						docker inspect container_name
+	docker exec -it			进入容器的交互式终端							docker exec -it container_name /bin/bash
+	docker-compose up		启动多容器应用（从 docker-compose.yml 文件）	docker-compose up
+	docker-compose down		停止并删除由 docker-compose 启动的容器、网络等	docker-compose down
+	docker info				显示 Docker 系统的详细信息						docker info
+	docker version			显示 Docker 客户端和守护进程的版本信息			docker version
+	docker stats			显示容器的实时资源使用情况						docker stats
+	docker login			登录 Docker 仓库								docker login
+	docker logout			登出 Docker 仓库								docker logout
+
+	docker build			使用 Dockerfile 构建镜像						docker build -t my-image .
+	docker images			列出本地存储的所有镜像							docker images
+	docker pull				从 Docker 仓库拉取镜像							docker pull ubuntu
+	docker push				将镜像推送到 Docker 仓库						docker push my-image
+	docker rmi				删除一个或多个镜像								docker rmi my-image
+
+使用 Docker 参与项目部署的具体流程（Docker 容器化 linux 环境和 macos 环境用来测试）：
+	1.镜像拉取、配置、推送：由开发人员或 CI/CD 系统在构建机上完成。
+		方法一：
+			编写 Dockerfile 和配置文件（核心，定义了如何从基础镜像构建出你的应用镜像）：
+				FROM ubuntu:20.04 # 运行父镜像
+				WORKDIR /usr/src/app # 设置容器内的工作目录
+				COPY package*.json ./ # 将 package.json 和 package-lock.json 复制到工作目录，这步先做是为了利用 Docker 的缓存层
+				RUN apt-get update && apt-get install -y \ # 更新软件包并安装必要工具
+					build-essential \
+					gcc \
+					g++ \
+					gdb \
+					git \
+					curl \
+					wget \
+					vim \
+					python3 \
+					python3-pip \
+					openssh-server \
+					net-tools \
+					iputils-ping \
+					&& rm -rf /var/lib/apt/lists/*
+				COPY . . # 将应用程序源代码复制到容器中
+				EXPOSE 3000 # 应用程序使用的端口
+				ENV DEBIAN_FRONTEND=noninteractive # 定义环境变量（可选，也可在运行时覆盖）
+				CMD ["/bin/bash"] # 容器启动时运行的命令
+			构建镜像（使用 docker build 命令，根据 Dockerfile 的指令构建镜像）： 
+				docker build -t [仓库名/]镜像名:标签 -f Dockerfile_ubuntu . （-t 参数用于给镜像打标签，-f 使用的构建文件）
+		方法二：
+			docker pull ubuntu:20.04 # 拉取基础镜像
+			docker run -it --name temp_ubuntu ubuntu:20.04 /bin/bash # 运行容器并进入交互模式
+			apt-get update # 在容器内执行安装命令
+			apt-get install -y build-essential gcc g++ git curl wget vim python3 python3-pip
+			docker commit temp_ubuntu linux_image # 退出容器，提交为新镜像
+			docker rm temp_ubuntu # 删除临时容器
+		测试镜像（推送到远程仓库之前，务必在本地验证）：
+			docker run -d -p 8080:3000 --name my-app-test my-username/my-node-app:v1.0 # 运行容器，将容器的 3000 端口映射到本机的 8080 端口
+			curl http://localhost:8080 # 访问 http://localhost:8080，看应用是否正常响应
+			docker logs my-app-test # 查看容器日志，确认没有报错
+			docker stop my-app-test # 测试完成后，停止并删除容器
+			docker rm my-app-test # 测试完成后，停止并删除容器
+		推送镜像到仓库（将测试通过的镜像推送到 Docker Hub、阿里云容器镜像服务、Harbor 等远程仓库）：
+			docker login # 首先登录到远程仓库
+			docker push my-username/my-node-app:v1.0 # 推送镜像
+	2.在测试环境再次拉取和使用：由测试人员或自动化部署脚本在目标测试机器上执行。（Docker 的命令在 Linux 和 macOS 上是完全一致的）
+		创建 Docker Compose 文件 和 redis 配置文件。
+		使用 Docker Compose 运行多容器应用（一个应用通常包含多个服务：应用本身 + 数据库 + 缓存，docker-compose.yml 文件可以轻松定义和运行这些服务）
+	3.启动整个应用栈
+		docker-compose up -d # 在包含 docker-compose.yml 的目录下执行
+		docker-compose ps # 查看所有容器状态
+		docker-compose logs app # 查看特定服务的日志（例如，查看应用启动日志）
+
+Docker 镜像有问题，如何排查？
+	检查容器状态：
+		docker ps -a # 查看所有容器，包括已停止的
+		如果容器状态是 Exited(非 Up状态)：说明容器启动后立即退出了，问题出在启动命令或应用本身。
+	查看容器日志（首要排查手段）：
+		docker logs <container_name_or_id> # 查看容器的标准输出/错误日志
+		docker logs -f <container_name_or_id> # 实时跟踪日志（类似 tail -f）
+		常见日志错误：
+			Module not found：Dockerfile 中依赖安装不全或文件复制错误。
+			Cannot connect to database：应用配置（如数据库连接字符串）错误或数据库容器未正常启动。
+			Address already in use：容器内端口冲突。
+	如果容器是 Up 状态但服务不正常可以“进入”容器内部检查：
+		docker exec -it <container_name_or_id> /bin/sh # 以交互模式进入容器内部，启动一个 shell （Alpine 镜像用 /sh，Ubuntu/CentOS 镜像用 /bash）
+		进入容器后可以：
+			检查文件结构：ls -la，确认应用代码是否被正确复制到 WORKDIR。
+			检查进程：ps aux，确认你的应用进程（如 node app.js）在运行。
+			手动执行命令：尝试手动运行启动命令（如 node app.js），看是否有直接报错。
+			检查网络连接：ping database，测试从应用容器是否能连接到数据库容器（在 Docker Compose 网络中，可以用服务名作为主机名）。
+			检查环境变量：env，确认环境变量是否正确设置。
+	检查镜像构建历史（有时候问题在构建阶段就埋下了）：
+		docker history my-username/my-node-app:v1.0 # 查看镜像的构建历史层，可以看到每一层执行的命令和生成的文件
+		docker diff <container_name_or_id> # 高级用法：查看容器相对于镜像的文件变化
+	在本地完全重现环境进行测试
+
+DevOps：
+	它的名字来源于 Development（开发） 和 Operations（运维） 的组合。
+	DevOps 不是一种具体的工具或职位，而是一套实践流程，其核心目标是缩短软件的交付周期，提高交付的质量和频率。
+
+Pub/Sub：
+	Pub/Sub 是 Publish/Subscribe（发布/订阅） 模式的简称。
+	核心思想：解耦发布者与订阅者。
+	发布者不知道、也不关心有哪些订阅者存在；订阅者也不知道发布者是谁。它们只通过一个中间代理进行通信。
+	云服务商托管产品：谷歌云、亚马逊云、腾讯云
+	开源中间件/组件：Redis Pub/Sub、Apache Kafka
+
+目前主流的 AI 工具和模型，他们之间的对比：
+	GPT-4/GPT-4o(OpenAI)
+		优点：
+			综合能力最强：在推理、创意、代码等方面表现均衡优秀
+			生态完善：API稳定，工具链丰富，社区支持好
+			多模态强大：图像理解、文档处理能力突出
+			更新及时：持续迭代，保持技术领先
+		缺点：价格较高、访问限制、中文优化一般。
+		最适合的场景：复杂推理（数学证明、逻辑分析、策略规划）、代码开发（算法实现、系统架构设计）、创意内容、学术研究、企业应用。
+	ChatGPT(OpenAI)
+		优点：
+			用户体验优秀：界面友好，交互自然
+			免费额度：有基本的【免费】使用权限
+			易用性强：无需编程经验，开箱即用
+			实时搜索：支持联网获取最新信息
+		缺点：能力受限（免费版较旧模型）、自定义差（无法深度定制和调优）、有使用次数和长度限制。
+		最适合的场景：日常对话、学习辅助、内容创作、快速原型（想法验证、简单代码示例）。
+	Gemini 1.5 Pro(Google)
+		优点：
+			【完全免费】：目前无使用限制
+			超长上下文：支持100万token（业界最长）
+			多模态原生：图像、视频、音频处理能力强
+			技术先进：使用MoE架构，效率高
+		缺点：中文支持一般、推理能力中等、生态较新。
+		最适合的场景：长文档处理、多模态分析（图像内容提取、视频理解）、研究学习、成本敏感项目。
+	Claude 3.5 Sonnet
+		优点
+			长文档专家：200K上下文，文档理解强
+			安全性好：内容过滤和伦理对齐做得好
+			逻辑严谨：分析问题条理清晰，输出规范
+			免费使用：有较好的免费额度
+		缺点：创意性稍弱（不够灵活）、主要专注于文本处理、响应较慢。
+		最适合的场景：法律文档、技术文档、内容审核、商业分析（报告生成、数据分析）
+	DeepSeek(深度求索)
+		优点
+			【完全免费】：API免费，商用友好
+			中文优化极好：对中文理解最地道自然
+			数学能力强：数理逻辑推理突出
+			开源可定制：模型权重开放，可自行部署
+		缺点：多模态弱（主要专注于文本）、英文稍弱、生态较新。
+		最适合的场景：中文内容、数学推理、编程开发、教育应用。
+	Qwen 2.5(阿里)
+		优点
+			中文顶尖：对中文理解和生成能力最强
+			多模态强大：图像、音频、视频全面支持
+			完全开源：可商用，支持本地部署
+			技术先进：采用最新架构，性能优秀
+		缺点：英文能力中等、文档英文为主、社区较新。
+		最适合的场景：中文NLP、多模态应用（中文场景的图像视频理解）、本地企业部署、电商领域。
+	HunYuan(腾讯)
+		优点
+			中文理解强：深度优化中文语言特性
+			多模态整合：与腾讯生态深度整合
+			本土化好：更懂中国用户需求和文化
+			【免费使用】：目前完全免费
+		缺点：国际视野有限（主要服务中文用户）、技术透明度低、工具链不成熟。
+		最适合的场景：中文对话、内容创作、本土化应用、腾讯生态整合。
+	
+	企业级应用：
+		高可靠性: GPT-4（国际业务） + Qwen 2.5（国内业务）,
+		成本控制: Claude（文档处理） + DeepSeek（日常应用）,
+		数据安全: 自部署 Qwen 2.5 或 HunYuan,
+		多模态需求: Gemini 1.5 Pro + GPT-4V
+	学习研究：
+		论文写作: Claude（严谨） + GPT-4（创意）,
+		代码学习: DeepSeek（免费） + GPT-4（复杂项目）,
+		语言学习: 多模型对比学习,
+		理论研究: Gemini（长文档） + Claude（逻辑分析）
+	开发编程：
+		生产环境: GPT-4（主） + DeepSeek（备）,
+		学习练习: DeepSeek（免费够用）,
+		算法竞赛: GPT-4（复杂算法） + Claude（代码规范）,
+		快速原型: ChatGPT（便捷）
+	文本处理：
+		长文档摘要: Claude 3.5（200K上下文）,
+		中文创作: Qwen 2.5 > DeepSeek > HunYuan,
+		英文内容: GPT-4 > Claude 3.5 > Gemini,
+		技术文档: Claude 3.5（结构清晰）
+	 多模态任务：
+		图像分析: GPT-4V > Gemini 1.5 > Qwen-VL,
+		文档OCR: Claude 3.5（PDF解析强）,
+		视频理解: Gemini 1.5（原生支持）,
+		中文多模态: Qwen 2.5（中文场景优化）
+	数学推理：
+		复杂数学: GPT-4 > DeepSeek > Claude 3.5,
+		教育数学: DeepSeek（免费好用）,
+		统计计算: GPT-4（准确率高）,
+		工程计算: 多模型验证
+
+
+
+面试重点 = {
+    "数据结构": ["链表", "树", "图", "堆", "哈希表"],
+    "算法": ["排序", "搜索", "动态规划", "贪心算法", "回溯"],
+    "Python特性": ["装饰器", "生成器", "上下文管理器", "GIL", "元类"],
+    "系统设计": ["OOP设计", "API设计", "数据库设计", "并发处理"],
+    "框架相关": ["Django/Flask", "SQLAlchemy", "Celery", "Redis"]
+}
+
+需要快速查找 → 哈希表
+需要维护顺序 → 树（二叉搜索树）
+需要频繁插入删除 → 链表
+需要处理关系网络 → 图
+需要优先级处理 → 堆
+
+需要快速查找 → 先排序，再用二分搜索
+优化资源分配 → 动态规划或贪心算法
+穷举所有可能性 → 回溯算法（配合剪枝优化）
+
+GIL 全局解释器锁： Python 的"交通警察"
+Metaclass 元类： 类的"模具工厂"
+Decorator 装饰器： 修改函数/类行为的"包装纸"
+Generator 生成器： 节省内存的"惰性序列工厂"
+Context Manager 上下文管理器： 资源管理的"自动开关"
+
+OOP设计：如何组织代码？ 类、对象、继承、多态
+API设计：如何与外界通信？ RESTful、HTTP方法、JSON
+数据库设计：如何存储数据？ 表结构、关系、索引、SQL
+并发处理：如何同时做多件事？ 线程、进程、锁、异步
+
+什么是链表（Linked List）？
+	链表是一种线性数据结构，元素通过指针连接，不像数组需要连续内存空间。
+	就像火车车厢。
+	
+	单向链表		节点→节点→None		只能向前遍历		栈、队列实现
+	双向链表		↔节点↔节点↔			可向前向后遍历		浏览器历史记录
+	循环链表		节点→节点→头节点		形成环状结构		轮询调度
+	
+	动态大小：无需预先分配内存
+	高效插入删除：O(1)时间复杂度（在已知位置）
+	内存利用：不要求连续内存空间
+
+什么是树（Tree）？
+	树是一种分层数据结构，由节点和边组成，每个节点有零个或多个子节点。
+	就像家族族谱。
+	
+	二叉树			每个节点最多2个子节点			搜索、排序
+	二叉搜索树(BST)	左子节点 < 父节点 < 右子节点	字典、数据库索引
+	平衡树(AVL)		自动保持平衡，搜索高效			需要快速查找的场景
+	堆				父节点总是大于/小于子节点		优先队列
+	B树				多路搜索树，减少磁盘IO			文件系统、数据库
+	
+	高效搜索：BST平均O(log n)搜索时间
+	层次关系：天然表达组织结构（文件系统、DOM树）
+	排序能力：中序遍历得到有序序列
+
+什么是图（Graph）？
+	图由顶点（节点）和边（连接）组成，表示对象之间的关系。
+	就像社交网络。
+	
+	图的表示方法：
+		方法1：邻接矩阵
+		方法2：邻接表（更节省空间）
+		方法3：类表示（功能最完整）
+	
+	关系建模：社交网络、交通路线、网页链接
+	路径查找：导航系统的最短路径
+	网络分析：推荐系统、社区发现
+
+什么是堆（Heap）？
+	堆是一种特殊的完全二叉树，父节点总是大于/小于子节点。
+	就像医院急诊排队。
+	
+	最大堆	父节点 ≥ 子节点	获取最大值
+	最小堆	父节点 ≤ 子节点	获取最小值
+	
+	高效极值操作：O(1)获取最大/最小值
+	优先队列：任务调度、Dijkstra算法
+	排序算法：堆排序O(n log n)
+
+什么是哈希表（Hash Table）？
+	哈希表通过哈希函数将键映射到数组索引，实现快速查找。
+	就像图书馆索引卡。
+	
+	极速查找：平均O(1)时间复杂度
+	键值存储：天然适合字典、缓存等场景
+	集合操作：快速判断元素是否存在
+
+链表		动态大小，指针连接		插入删除：O(1)		内存管理、LRU缓存
+树		层次结构，递归定义		搜索：O(log n)		文件系统、数据库索引
+图		关系网络，顶点+边		依算法而定			社交网络、路径规划
+堆		快速访问极值			插入删除：O(log n)	任务调度、优先队列
+哈希表	键值映射，快速查找		增删查改：O(1)		字典、缓存、集合
+
+什么是排序（Sorting）？
+	排序是将一组数据按照特定顺序（升序/降序）重新排列的过程。
+	就像整理扑克牌。
+	
+	常用排序：
+		冒泡排序		O(n²)		简单易懂，效率低	教学演示，小数据量
+		快速排序		O(n log n)	高效，常用		通用排序，大数据量
+		归并排序		O(n log n)	稳定，额外空间		链表排序，外部排序
+	
+	提高搜索效率：有序数据可以用二分查找
+	预处理步骤：很多算法需要先排序
+
+什么是搜索（Searching）？
+	搜索是在数据集中查找特定元素的过程。
+	就像查字典。
+	
+	线性搜索：一页页翻找（慢）
+	二分搜索：根据字母顺序快速定位（快）
+	
+	搜索算法分类：
+		线性搜索		O(n)		无前提条件	无序小数据集
+		二分搜索		O(log n)	必须有序		大型有序数据集
+		哈希搜索		O(1)		需要哈希表	键值对查找
+
+什么是动态规划（Dynamic Programming）？
+	动态规划通过"记住"子问题的解来避免重复计算，解决复杂问题。
+	核心思想：分治 + 记忆化，将大问题分解为小问题，存储小问题的解，避免重复计算。
+
+	优化问题：最短路径、资源分配
+	现实应用：股票买卖、文本相似度等
+	
+	通俗来讲：动态规划就是从起点出发经过一系列的行进路线到达终点，求最优值、方案数、概率。
+	更准确的讲：动态规划就是从初始状态出发经过一系列的状态转移到达目标状态，求最优值、方案、概率。
+	但是，状态转移必须要有方向，且整体不能成环；状态的个数在可接受的范围内。
+	转移的开销被叫做权重 w(weight) 或者 c(cost)，当前状态经过开销后进入下一个状态。
+	对于转移权重为 1 的问题可以用广度优先算法来解决。
+
+什么是贪心算法（Greedy Algorithm）？
+	贪心算法在每一步选择中都采取当前状态下最优的选择，希望导致全局最优解。
+	就像找零钱。
+	
+	贪心 vs 动态规划：
+		特点			贪心算法				动态规划
+		决策方式		局部最优选择			考虑所有可能性
+		效率			通常更快				可能较慢
+		结果			不一定全局最优			保证全局最优
+		适用问题		具有贪心选择性质的问题	重叠子问题的问题
+	
+	现实应用：霍夫曼编码、最小生成树。
+	
+什么是回溯（Backtracking）？
+	回溯算法通过尝试所有可能性，当发现当前路径不可能得到解时，回退到上一步重新选择。
+	就像走迷宫。
+	
+	现实应用：组合问题、约束满足。
+
+什么是 GIL？
+	GIL（全局解释器锁）是一个全局互斥锁，它确保在任何时刻只有一个线程在执行 Python 字节码
+	
+	全局性：整个解释器进程只有一个 GIL
+	互斥性：同一时间只有一个线程能持有 GIL
+	字节码级别：控制的是 Python 字节码的执行
+
+	GIL 的工作原理：
+		线程需要获取GIL才能执行Python代码
+		
+		GIL 切换机制
+			时间片切换：每执行一定数量的字节码指令后切换
+			I/O 操作切换：遇到 I/O 操作时主动释放 GIL
+			强制切换：通过信号机制强制线程释放 GIL
+
+	GIL 的影响：
+		CPU 密集型任务： 多线程可能比单线程更慢，因为 GIL 导致线程间频繁切换
+		I/O 密集型任务： 多线程明显更快，因为 I/O 等待期间会释放 GIL
+		混合方案： 线程池处理I/O，进程池处理CPU任务
+
+	GIL 的存在原因：
+		内存管理安全： Python 使用引用计数进行内存管理，防止多线程竞争导致对象引用计数错误
+		C 扩展兼容性： 许多 C 扩展假设在单线程环境中运行
+		历史遗留问题： 早期计算机多为单核，GIL 简化了实现
+
+	规避 GIL 限制的方法：
+		使用多进程（推荐）： 每个进程有独立的 Python 解释器和 GIL
+		使用异步编程： 将 CPU 密集型任务委托给线程池
+		使用 C 扩展释放 GIL： 在 C 扩展中手动释放 GIL，执行不涉及 Python 对象的计算
+		使用 Jython 或 IronPython： 这些实现没有 GIL，但生态不如 CPython
+
+什么是元类？
+	元类是创建类的类，它允许你控制类的创建过程。
+	普通类用于创建对象（实例）
+	元类用于创建类（类本身也是对象）
+	
+	元类的工作原理：
+		当使用 class 关键字时，Python 内部执行：
+			收集类命名空间，由 __prepare__方法返回的对象（通常是一个字典），收集类定义中的所有成员（属性和方法），直到类创建完成。
+			确定元类（默认是 type）
+			执行元类的 __new__ 和 __init__方法
+	
+	元类的核心方法：
+		__prepare__ 方法（Python 3+）： 准备命名空间
+		__new__ 方法： 创建类
+		__init__ 方法： 初始化类
+	
+	命名空间（Namespace）：
+		命名空间是一个从名称到对象的映射（字典结构）。
+		当讨论元类收集类命名空间时，我们指的是在类创建过程中，类定义体（class body）中的属性和方法构成的临时命名空间。
+		命名空间的本质是 Python 中用于存储变量名（标识符）与其对应对象的容器，分为三种：
+			局部命名空间（函数内部）
+			全局命名空间（模块级别）
+			类命名空间（类定义体内）
+		元类命名空间的特点：
+			临时性： 仅在类创建过程中存在，最终会被转换为类的 __dict__
+			可定制性： 通过元类的 __prepare__可以返回自定义容器（如 OrderedDict）
+			包含所有定义： 包括方法、类变量、__module__等元信息
+			可修改： 在 __new__中可对命名空间内容进行增删改查
+		示例输出：
+			{
+				'__module__': '__main__',
+				'__qualname__': 'MyClass',
+				'attr': 42,
+				'method': <function MyClass.method at 0x...>
+			}
+	type 和 object 的关系
+		type 和 object 的关系构成了 Python 对象模型的核心基础。
+		
+		object
+			Python 中所有类的基类
+			位于类型层次结构的最顶层
+			本身没有基类
+			它的类型是 type
+		type
+			Python 的元类，用于创建类对象
+			同时也是它自身的元类
+			继承自 object
+			它自己是自己的实例（它的类型是 type）
+		type 和 object 的循环关系
+			type 是 object 的子类（所有类都直接或间接继承自 object）
+			object 是 type 的实例（所有类都是 type 的实例）
+			type 也是自己的实例
+		
+		isinstance(X, type)：检查 X 是否是类
+		issubclass(X, object)：检查 X 是否是 Python 类
+		type(X)：获取 X 的类型
+		
+		object (所有类的基类) -> type (元类，创建类的类) -> 类 (用户定义的类) -> 实例 (用户创建的对象)
+
+什么是装饰器？
+	装饰器（Decorator）是一种高阶函数，用于在不修改原函数代码的情况下，动态扩展函数或类的功能。
+
+	输入：一个函数或类
+	输出：修改后的函数或类
+	本质：语法糖（@decorator）
+	
+	常见应用场景：
+		日志记录
+		性能测试（计时）
+		权限校验
+		缓存（如@functools.lru_cache）
+
+什么是生成器？
+	生成器（Generator）是一种惰性计算的迭代器，通过 yield 关键字逐步产生值，节省内存。
+	
+	内存高效：逐个生成值，不预存完整序列
+	状态保持：每次 yield 后暂停，下次继续执行
+	
+	生成器表达式： (x*x for x in range(5))
+	
+	典型应用场景：
+		处理大型文件（逐行读取）
+		无限序列（如斐波那契数列）
+		数据流管道
+
+什么是上下文管理器？
+	上下文管理器（Context Manager）可以通过 with 语句管理资源（如文件、锁），确保资源的正确获取和释放。
+	
+	自动资源管理：进入/退出时自动处理
+	异常安全：即使出错也会执行清理
+	
+	实现方式：
+		方法1：类实现 __enter__ 和 __exit__ 进行文件载入 和 异常处理
+		方法2：使用 contextlib.contextmanager 装饰器将一个生成器函数快速转换为上下文管理器
+			yield 的值是 with 语句中 as 的目标，若不需要返回值，可直接 yield（无参数）
+			在 yield 之前的执行相当于 __enter__ 的逻辑
+			在 yield 之后的执行相当于 __exit__ 的逻辑，会处理 with 块内抛出的异常，可通过 try/finally 确保资源释放。
+	
+	常见应用场景：
+		文件操作
+		数据库连接
+		线程锁管理（with threading.Lock()）
+		临时环境修改（如 @pytest.fixture）
+
+什么是 OOP 设计？
+	OOP（Object-Oriented Programming）面向对象设计。
+	OOP 设计是一种编程思想，它把现实世界中的事物抽象成“对象”，并通过对象之间的交互来构建程序。
+	核心思想是封装、继承、多态和抽象。
+	其目的是提高代码的可重用性、灵活性和可维护性。
+	
+	核心原则（SOLID）：
+		SRP 单一职责		一个类只负责一个功能领域		UserService只处理用户业务逻辑
+		OCP 开闭原则		对扩展开放，对修改关闭			通过继承/组合扩展，而非修改原有类
+		LSP 里氏替换		子类必须能替换父类				Rectangle和 Square的继承问题
+		ISP 接口隔离		多个专用接口优于一个通用接口		分离 Readable和 Writable接口
+		DIP 依赖倒置		依赖抽象而非具体实现			依赖 PaymentGateway接口而非具体支付类
+	
+	OOP 的四大支柱：
+		封装（Encapsulation）：将数据（属性）和操作数据的方法（行为）捆绑在一起，并隐藏内部实现细节。
+		继承（Inheritance）：一个类（子类）可以继承另一个类（父类）的属性和方法，并添加自己特有的内容。
+		多态（Polymorphism）：不同类的对象可以对同一消息（方法调用）做出不同的响应。
+		抽象（Abstraction）：隐藏复杂的实现细节，只暴露必要的接口。
+
+什么是 API 设计？
+	API（Application programming interface）应用程序接口。
+	设计这些接口的规范。包括接口的地址（URL）、请求方法（GET/POST/PUT/DELETE）、需要什么参数、返回什么数据、出错时怎么办。
+	在Web开发中，通常指 RESTful API 或 GraphQL API 的设计。
+	目标是让 API 直观、一致、可靠且易于使用。
+	
+	什么是 RESTful？
+		RESTful 是一种设计 API 的架构风格。
+		RESTful 核心思想：将网络上的任何数据或服务都视为“资源”（Resource），并通过标准的 HTTP 方法（如 GET、POST）来操作这些资源。​
+	
+	RESTful 的六大核心原则：
+		统一接口（Uniform Interface）：所有操作都使用统一的 HTTP 方法和资源标识符（URL）。
+		无状态（Stateless）：每个请求必须包含处理该请求所需的全部信息（如认证令牌、资源ID），服务器不保存客户端的状态。
+		可缓存（Cacheable）：服务器通过响应头（如 Cache-Control）明确指示哪些响应可以被缓存，以及缓存多久。
+		客户端-服务器分离（Client-Server Separation）：客户端负责用户界面和用户体验（如网页、手机App），服务器负责数据处理、业务逻辑和存储。
+		分层系统（Layered System）：在客户端和服务器之间可以有多个中间层（如负载均衡器、安全层、缓存层）。
+		按需代码（Code-On-Demand，可选）：服务器可以返回可执行代码（如JavaScript）给客户端执行。这个原则很少使用，大多数RESTful API只返回数据（JSON/XML）。
+
+什么是数据库设计？
+	数据库设计是规划数据如何存储、组织和关联的“仓库布局图”。
+	
+	规范化原则
+	1NF		原子性，每列不可再分	地址拆分为省、市、详细地址
+	2NF		消除部分依赖			订单表中不应存储产品价格
+	3NF		消除传递依赖			员工表中部门地址应单独存部门表
+
+	性能优化策略：
+		索引策略：对查询条件字段建立索引
+		反范式化：适当冗余提高查询性能（如订单表冗余用户名）
+		分区表：按时间范围分区大数据表
+		读写分离：主库写，从库读
+
+什么是并发处理？
+	并发处理是让程序能够“同时”处理多个任务的机制。
+	
+	Python并发模型对比：
+		多线程	共享内存，GIL 限制 CPU 密集型任务	适用 I/O 密集型任务（网络请求、文件操作）
+		多进程	独立内存，真并行					适用 CPU 密集型任务（计算、图像处理）
+		异步IO	单线程事件循环，高并发 I/O			高并发网络应用（Web 服务器）
+		协程		轻量级线程，用户态调度				高并发微服务、爬虫
+	
+	进程（Process）：
+		进程是程序的独立执行实例，拥有独立的内存空间。
+		进程间通信（IPC）需要特殊机制（如管道、消息队列）
+	线程（Thread）：
+		线程是进程内的执行单元，共享进程的内存和资源，但是每个线程需要独立栈内存。
+		线程间通信更快，但需注意资源竞争（如多个线程同时修改账户余额）。
+	锁（Lock）：
+		使用互斥锁（Mutex）或信号量（Semaphore）保护共享资源。
+		悲观锁：默认别人会冲突，先锁再操作（如银行默认锁抽屉）。
+		乐观锁：假设不会冲突，提交时检查版本号（如客户签字确认时核对余额）。
+	异步（Asynchronous）：
+		主线程不阻塞，任务完成后通过回调（Callback）或事件通知（Event）返回结果。
+		其实是单线程在执行任务，但是等待结果期间可以挂起继续执行别的任务。
+		多线程靠"人多力量大"，异步靠"时间管理大师"
+	
+	异步I/O		一个超级服务员同时服务多桌客人，利用等待时间处理其他任务		非阻塞，单线程高效处理大量I/O
+	多线程		多个普通服务员每人服务一桌客人，但经常在厨房门口等待			阻塞式，线程在I/O时闲置
+	多进程		多个独立厨房每个厨房有完整的厨师团队						真正并行，适合重计算
+
+什么是 Django / Flask？
+	Web 应用框架。
+	
+	处理HTTP请求/响应
+	路由管理、模板渲染
+	内置ORM（Django）或扩展支持（Flask-SQLAlchemy）
+	快速构建Web应用
+	Django"大而全"（自带Admin/ORM），Flask"小而美"（灵活可扩展）
+	
+
+什么是 SQLAlchemy？
+	Python ORM（对象关系映射）工具。
+	
+	数据库操作抽象化（用 Python 类映射数据库表）
+	支持多种数据库（MySQL/PostgreSQL/SQLite 等）
+	提供 Core（SQL表达式）和 ORM 两种使用方式
+	避免手写SQL
+	支持事务、连接池
+	适合复杂查询场景
+	
+
+什么是 Celery?
+	分布式任务队列。
+	
+	异步执行耗时任务（如邮件发送、文件处理）
+	定时任务（ crontab 替代方案）
+	分布式多 worker 处理
+	解耦主业务流程
+	提高系统响应速度
+	需搭配消息代理（Redis/RabbitMQ）
+
+什么是 Redis？
+	内存数据结构存储 或者 远程字典缓存服务。
+	
+	高速缓存（减轻数据库压力）
+	支持多种数据结构（String/Hash/Set等）
+	发布订阅、分布式锁
+	微秒级读写性能
+	支持数据持久化
+	常作为 Celery 的消息代理
+
+用户访问网页：
+	Django/Flask 接收请求
+	先查Redis缓存 → 命中则直接返回
+	未命中 → 用SQLAlchemy查数据库 → 结果存入Redis
+提交订单：
+	Django/Flask 处理核心逻辑
+	通过 Celery 异步发送订单确认邮件
+	Celery 使用 Redis 作为任务队列
